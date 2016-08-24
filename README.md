@@ -17,7 +17,7 @@ Following this, you can either fork this repository or copy and paste these scri
 
 ## Use
 
-The main script you to work with to upload photos is `upload_photos_to_zooniverse.R`. There are a number of objects in there that you will have to alter for your project that are then plugged into the `zooniverse_subject_uploadeR.R` script.  The purpose of each of the objects in `upload_photos_to_zooniverse.R` are commented out so you can determine what they do.
+The main script that will be changed in order to upload photos is `upload_photos_to_zooniverse.R`. There are a number of objects in there that you will have to alter for your project that are then plugged into the `zooniverse_subject_uploadeR.R` script.  The purpose of each of the objects in `upload_photos_to_zooniverse.R` are commented out so you can determine what they do. Do not change the object names or `zooniverse_subject_uploadeR.R` will not work (just change the objects values).
 
 After reassinging the obhjects in `upload_photos_to_zooniverse.R` you can source `zooniverse_subject_uploadeR.R` (the last line of code in `upload_photos_to_zooniverse.R`) assuming that it is in your current working directory to start the image resizing and upload process. If there are any missing objects that are needed for uploading it should spit back a relevant error.
 
