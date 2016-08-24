@@ -13,7 +13,7 @@ panoptes-subject-uploader requires you to download a previous version of Node.js
 
 You will also need to download [ImageMagick](http://www.imagemagick.org/script/index.php). Make sure to click the Install legacy utilities box (e.g. `convert`) when you install it.  Version 7.0.2 was used during the creation of these scripts.
 
-Following this, you can either [fork](https://help.github.com/articles/fork-a-repo/) this repository or copy and paste these scripts into your favorite text editor and save them.
+Following this, you can either fork this repository or copy and paste these scripts into your favorite text editor and save them.
 
 ## Use
 
