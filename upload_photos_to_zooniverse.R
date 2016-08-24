@@ -9,7 +9,7 @@
 packages_required <- c("dplyr", "magrittr")
 
 # the location of the folder of photos to resize.
-folder_to_resize <- "Z:/TransectTrailCamPics/FA14/JNT" 
+folder_to_resize <- "put/path/name/to/folder/here" 
 
 # Do you want to look through all nested folders within folder_to_resize?
 search_subdirs <- TRUE
@@ -18,6 +18,9 @@ search_subdirs <- TRUE
 photo_file_type <- ".JPG$|.jpeg$" 
 
 # location of convert.exe in ImageMagick on PC
+# Change this if convert.exe is located in some
+# other folder.  This would be the default
+# location if you download ImageMagick-7.0.2-Q16
 im <- "C:\\Program Files\\ImageMagick-7.0.2-Q16\\convert.exe"
 
 # temporary directory to to store resized photos,
@@ -33,8 +36,9 @@ upload <- TRUE
 
 # Do you want to delete resized photos after uploading?
 # would be a good idea if you are uploading a huge amount of photos
-# that you do not want to store on your hard drive. This effectively
-# clears the temporary directory each batch.
+# that you do not want to store on your hard drive. This
+# clears the temporary directory after each upload of
+#1000 photos.
 delete_resized_post_upload <- FALSE
 
 #####################################
