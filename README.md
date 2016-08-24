@@ -13,13 +13,15 @@ panoptes-subject-uploader requires you to download a previous version of Node.js
 
 You will also need to download [ImageMagick](http://www.imagemagick.org/script/index.php). Make sure to click the Install legacy utilities box (e.g. `convert`) when you install it.  Version 7.0.2 was used during the creation of these scripts.
 
-Following this, you can either [fork])https://help.github.com/articles/fork-a-repo/) this repository or copy and paste these scripts into your favorite text editor and save them.
+Following this, you can either [fork](https://help.github.com/articles/fork-a-repo/) this repository or copy and paste these scripts into your favorite text editor and save them.
 
 ## Use
 
 The main script you to work with to upload photos is `upload_photos_to_zooniverse.R`. There are a number of objects in there that you will have to alter for your project that are then plugged into the `zooniverse_subject_uploadeR.R` script.  The purpose of each of the objects in `upload_photos_to_zooniverse.R` are commented out so you can determine what they do.
 
 After reassinging the obhjects in `upload_photos_to_zooniverse.R` you can source `zooniverse_subject_uploadeR.R` (the last line of code in `upload_photos_to_zooniverse.R`) and everything should be good to go!  If there are any missing objects that are needed for uploading it should spit back a relevant error.
+
+The first progress bar is for resizing a batch of photos. The additional data printed in the `R` console is from the upload process via `panoptes-subject-uploader`. This script will batch process any number of photos, but does it in multiples of 1000 (the last batch is whatever is leftover).
 
 ## Finding the apporopriate subject id's, workflows, etc.
 
