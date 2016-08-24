@@ -49,15 +49,15 @@ delete_resized_post_upload <- FALSE
 # workflow # is a header of the workflow you click on.
 
 # your username
-username <- "mason_UWI"
+username <- "your username"
 # and passowrd
-password <- "Parulida3!"
+password <- "your password"
 # project number number
-project <- 2990
+project <- NA
 # your workflow number
-workflow <- 2334
+workflow <- NA
 # subject set, applies to all photos you are uploading
-subject_set <- 5801
+subject_set <- NA
 
 # run zooniverse_subject_uploaderR.R
 source("zooniverse_subject_uploader.R")

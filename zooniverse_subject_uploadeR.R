@@ -1,7 +1,7 @@
 #########################
 #
 #
-# pRep zooniverse photos
+# zooniverse_subject_uploadeR.R
 #
 #
 #
