@@ -45,3 +45,9 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# remove a bunch of R project files from this repo
+*.Rproj
+.Rproj.user
+*.RData
+.Rhistory
