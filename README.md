@@ -1,6 +1,4 @@
 # zooniverse_subject_uploadeR
-initial commit
-*Zooniverse subject uploadeR*
 
 An R script that resizes camera trap photos via ImageMagick and uploads them as subjects for projects built on zooniverse.org (Panoptes) via [panoptes-subject-uploader](https://github.com/zooniverse/panoptes-subject-uploader).  
 
