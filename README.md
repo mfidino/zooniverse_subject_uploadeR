@@ -17,7 +17,7 @@ Following this, you can either fork this repository or copy and paste these scri
 
 The main script that will be changed in order to upload photos is `upload_photos_to_zooniverse.R`. There are a number of objects in there that you will have to alter for your project that are then plugged into the `zooniverse_subject_uploadeR.R` script.  The purpose of each of the objects in `upload_photos_to_zooniverse.R` are commented out so you can determine what they do. Do not change the object names or `zooniverse_subject_uploadeR.R` will not work (just change the objects values).
 
-After reassinging the objects in `upload_photos_to_zooniverse.R` you can source `zooniverse_subject_uploadeR.R` (the last line of code in `upload_photos_to_zooniverse.R`) assuming that it is in your current working directory to start the image resizing and upload process. If there are any missing objects that are needed for uploading it should spit back a relevant error.
+After reassinging the objects in `upload_photos_to_zooniverse.R` you can source `zooniverse_subject_uploadeR.R` (the last line of code in `upload_photos_to_zooniverse.R`). Assuming that both scripts are in your current working directory R will commence the image resizing and upload process. If there are any missing objects that are needed for uploading it should spit back a relevant error.
 
 The first progress bar is you see in the `R` console is the progress made on resizing a batch of photos. The additional data printed in the `R` console following this is from the upload process via `panoptes-subject-uploader`. This script will batch process any number of photos, but does it in multiples of 1000 (the last batch is whatever is leftover).
 
