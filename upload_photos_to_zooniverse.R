@@ -17,6 +17,10 @@ search_subdirs <- TRUE
 # REGEXP to search for jpg files
 photo_file_type <- ".JPG$|.jpeg$" 
 
+# Do you want to resize photos and copy them to a 
+# temporary folder?
+resize <- FALSE
+
 # location of convert.exe in ImageMagick on PC
 # Change this if convert.exe is located in some
 # other folder.  This would be the default
@@ -53,9 +57,9 @@ delete_resized_post_upload <- FALSE
 # workflow # is a header of the workflow you click on.
 
 # your username
-username <- "your username"
-# and passowrd
-password <- "your password"
+username <- "your_username"
+# and password
+password <- "your_password"
 # project number number
 project <- NA
 # your workflow number
@@ -65,4 +69,5 @@ subject_set <- NA
 
 # run zooniverse_subject_uploaderR.R
 source("zooniverse_subject_uploader.R")
+
 

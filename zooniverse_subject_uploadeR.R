@@ -62,7 +62,7 @@ if(length(folder_to_resize) == 0 |is.character(folder_to_resize)==FALSE ){
 
 # get the path names of the directory and all subdirectories
 # if search_subdirs = TRUE
-paste("Collecting file_paths")
+
 file_paths <- list.files(path = folder_to_resize, 
            pattern = photo_file_type, # currently only takes JPG files
            recursive = search_subdirs, # we want files in the sub-directories as well
@@ -76,13 +76,10 @@ photo_names <- strsplit(file_paths, "/") %>% sapply(FUN = function(x){x[length(x
 # a temporary directory. First we determine how many
 # iterations of 1k photos we need to take through
 # photo_names
-if(length(photo_names) %% 1000 == 0){
-  # integer division if we have x000 number of photos
+
+  # integer division 
   n_iters <- length(photo_names) %/% 1000
-    }else{
-      # add 1 to it if we do not (usually the case)
-      n_iters <- length(photo_names) %/% 1000 + 1
-  }
+
 
 # set up to grab the first 1000 photos, these
 # objects get updated throughout the for loop below.
@@ -116,7 +113,7 @@ if(crop_drop){
       im_call <- " -resize 900x600 -quality 100 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float "
   }
 # for loop to iterate through photos
-for(i in 1:n_iters){
+for(i in 7:n_iters){
   paste0("Resizing batch ", i, " of ",n_iters, " batches." )
   # make 1000 unique ids for all i less than n_iters
   if(i<n_iters){
@@ -136,9 +133,7 @@ for(i in 1:n_iters){
   
   # write the manifest to the tmp_dir
   write.csv(manifest, manifest_file_path , row.names = FALSE)
-  # tell me what's going on
-  paste0("Copying and resizing ", length(id), " files to ", tmp_dir," from batch ",i," of ",n_iters, " batches." )
-  Sys.sleep(1)
+  if(resize){
   # make a progress bar
   pb <- txtProgressBar(min =start, max = end, style = 3)
   for(photo in 1:length(id)){
@@ -151,6 +146,7 @@ for(i in 1:n_iters){
   }
   # close the progress bar
   close(pb)
+  }
   
   # fill the parameters we need for uploading the photos
   if(upload){
