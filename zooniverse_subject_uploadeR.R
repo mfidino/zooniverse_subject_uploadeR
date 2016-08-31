@@ -78,7 +78,11 @@ photo_names <- strsplit(file_paths, "/") %>% sapply(FUN = function(x){x[length(x
 # photo_names
 
   # integer division 
+if(length(photo_names)>= 1000){
   n_iters <- length(photo_names) %/% 1000
+  }else{
+    n_iters <- 1
+  }
 
 
 # set up to grab the first 1000 photos, these
@@ -113,7 +117,7 @@ if(crop_drop){
       im_call <- " -resize 900x600 -quality 100 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float "
   }
 # for loop to iterate through photos
-for(i in 7:n_iters){
+for(i in 1:n_iters){
   paste0("Resizing batch ", i, " of ",n_iters, " batches." )
   # make 1000 unique ids for all i less than n_iters
   if(i<n_iters){
