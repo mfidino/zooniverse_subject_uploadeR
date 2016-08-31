@@ -7,7 +7,7 @@ An R script that resizes camera trap photos via ImageMagick and uploads them as 
 - This is written to work for PCs (sorry, I don't have a Mac)
 
 ## Setup
-panoptes-subject-uploader requires you to download a previous version of Node.js (version >=0.10.36). [Link to version 0.10.35](https://nodejs.org/download/release/v0.10.35/). For Windows you will want to download the .msi file.
+panoptes-subject-uploader requires you to download Node.js (any version >=0.10.36). [Link to download](https://nodejs.org/en/). 
 
 You will also need to download [ImageMagick](http://www.imagemagick.org/script/index.php). Make sure to click the 'Install legacy utilities (e.g. convert)' box when you install it.  Version 7.0.2 was used during the creation of these scripts.
 
