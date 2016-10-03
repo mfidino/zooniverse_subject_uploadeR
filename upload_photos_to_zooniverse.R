@@ -9,7 +9,7 @@
 packages_required <- c("dplyr", "magrittr")
 
 # the location of the folder of photos to resize.
-folder_to_resize <- "put/folder/name/here" 
+folder_to_resize <- "put/path/to/folder/here" 
 
 # Do you want to look through all nested folders within folder_to_resize?
 search_subdirs <- TRUE
