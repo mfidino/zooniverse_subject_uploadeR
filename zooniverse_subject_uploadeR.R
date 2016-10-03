@@ -62,12 +62,17 @@ if(length(folder_to_resize) == 0 |is.character(folder_to_resize)==FALSE ){
 
 # get the path names of the directory and all subdirectories
 # if search_subdirs = TRUE
-
-file_paths <- list.files(path = folder_to_resize, 
+file_paths <- unlist(list.files(path = folder_to_resize, 
            pattern = photo_file_type, # currently only takes JPG files
            recursive = search_subdirs, # we want files in the sub-directories as well
            full.names = TRUE, # get the entire file names
-           ignore.case = TRUE) #get .jpg or .JPG
+           ignore.case = TRUE)) #get .jpg or .JPG
+
+# remove the subfolders that are in subfolders to skip
+if(length(subfolders_to_skip)>0){
+file_paths <- file_paths[-grep(paste(as.character(subfolders_to_skip),
+                                    collapse = "|"), file_paths)]
+}
 
 # collect just the names of the photos from file_paths
 photo_names <- strsplit(file_paths, "/") %>% sapply(FUN = function(x){x[length(x)]})
