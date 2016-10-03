@@ -9,17 +9,20 @@
 packages_required <- c("dplyr", "magrittr")
 
 # the location of the folder of photos to resize.
-folder_to_resize <- "put/path/name/to/folder/here" 
+folder_to_resize <- "put/folder/name/here" 
 
 # Do you want to look through all nested folders within folder_to_resize?
 search_subdirs <- TRUE
+
+# are there any sub-folders that you want to skip?
+subfolders_to_skip <- NULL
 
 # REGEXP to search for jpg files
 photo_file_type <- ".JPG$|.jpeg$" 
 
 # Do you want to resize photos and copy them to a 
 # temporary folder?
-resize <- FALSE
+resize <- TRUE
 
 # location of convert.exe in ImageMagick on PC
 # Change this if convert.exe is located in some
