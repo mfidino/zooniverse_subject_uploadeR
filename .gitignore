@@ -51,6 +51,7 @@ Temporary Items
 .Rproj.user
 *.RData
 .Rhistory
+*.csv
 
 # remove log file made by panoptes-subject-uploader
 panoptes-subject-uploader.log
