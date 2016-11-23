@@ -19,7 +19,7 @@ The main script that will be changed in order to upload photos is `upload_photos
 
 After reassinging the objects in `upload_photos_to_zooniverse.R` you can source `zooniverse_subject_uploadeR.R` (the last line of code in `upload_photos_to_zooniverse.R`). Assuming that both scripts are in your current working directory R will commence the image resizing and upload process. If there are any missing objects that are needed for uploading it should spit back a relevant error.
 
-The first progress bar is you see in the `R` console is the progress made on resizing a batch of photos. The additional data printed in the `R` console following this is from the upload process via `panoptes-subject-uploader`. This script will batch process any number of photos, but does it in multiples of 1000 (the last batch is whatever is leftover).
+The first progress bar you see in the `R` console is the progress made on resizing a batch of photos. The additional data printed in the `R` console following this is from the upload process via `panoptes-subject-uploader`. This script will batch process any number of photos, but does it in multiples of 1000 (the last batch is whatever is leftover).
 
 Before uploading photos you may want to resize a test batch to make sure that the size of photos is < 600 kb. The current ImageMagick call does a sufficient job for camera trap images collected with Bushnells. 
 
