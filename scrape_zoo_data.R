@@ -103,7 +103,24 @@ colnames(final) <- c("id", "species", "file_path", "retired_id",
 
 # remove nthnghr
 togo <- which(final$species=="NTHNGHR")
-write.csv(final[-togo,], "cww_species_data.csv", row.names = FALSE)
+
+# add the date/time stuff
+
+# read in date/time data
+dt <- read.table("../photo_pull/to_format/output_FA14.txt", header = TRUE,
+                 sep = "\t", stringsAsFactors = FALSE, fill = TRUE)
+colnames(dt)[1] <- "file_path"
+
+# remove the second slash in final$file_path
+final$file_path <- gsub("//", "/", final$file_path)
+gsub("//", "/", head(fin$file_path))
+
+in_both <- which( dt$file_path %in% unique(final$file_path))
+
+dt <- dt[in_both, 1:2]
+
+more_merged <- left_join(final, dt, by = "file_path")
+write.csv(more_merged[-togo,], "cww_species_data.csv", row.names = FALSE)
 # only keep what we need
 ls <- longshot[-which(is.na(longshot$id)),]
 ls <- ls[-which(is.na(ls$file_path)),]
