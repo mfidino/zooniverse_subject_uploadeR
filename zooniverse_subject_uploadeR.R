@@ -117,9 +117,9 @@ if (file.exists(tmp_dir)) {
           dir.create(file.path(tmp_dir))
         }
 if(crop_drop){
-  im_call <- " -crop 0x0+0-100 -resize 900x600 -quality 100 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float "
+  im_call <- " -crop 0x0+0-100 -resize 900x600 -quality 96 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float "
     }else{
-      im_call <- " -resize 900x600 -quality 100 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float "
+      im_call <- " -resize 900x600 -quality 96 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float "
   }
 # for loop to iterate through photos
 for(i in 1:n_iters){
