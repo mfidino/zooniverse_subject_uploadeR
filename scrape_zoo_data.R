@@ -154,13 +154,56 @@ mm <- mm[grep("T0", mm$task),]
 usre <- t(t(sort(table(t2$usrnm))))
 
 nen <- table(usre)
-
+tiff("n_phot_tagged.tiff", height = 7, width = 7, units = "in",
+     res = 600, compression = "lzw")
+par(mar = c(5,6,4,1))
 plot(c(cumsum(nen)/3426) ~ as.numeric(names(nen)), type = "p",
-     xlab = "number of photos tagged",
-     ylab = "cumulative proportion of users")
+     xlab = "Number of photos tagged",
+     ylab = "Cumulative proportion of users", cex.lab = 2, bty = "n")
+dev.off()
 abline(v = 15)
 table(usre)
 ack2 <- Sys.time() - ack2
 
 longshot <- plyr::rbind.fill.matrix(hunch)
 longshot <- plyr::rbind.fill(lapply(slist[[1]], function(x) do.call("data.frame", as.list(x))))
+
+
+dd <- read.csv("cww_species_data.csv", header = TRUE)
+
+spcount <- sort(table(dd$species[dd$agreement_confidence>0.5]))
+
+act_names <- c("Beaver", "Flying Sq.", "Groundhog", "Livestock", "Chipmunk",
+               "Mink", "Mouse", "Gray Fox", "Red Fox", "Melanistic Sq.",
+               "Rat", "Mower", "Skunk", "Coyote", "Cat", "B&W Sq.", "Rabbit", "Opossum",
+               "Bird", "Deer", "Dog", "Fox Sq.", "Raccoon", "Gray Sq.")
+
+hm <- data.frame(species = names(spcount), act_names = act_names, stringsAsFactors = FALSE)
+plot(as.numeric(spcount) ~ c(1:length(spcount)), xlab = "")
+windows()
+tiff("cww_bar.tiff", height = 7, width = 7, units = "in",
+     res = 600, compression = "lzw")
+par(mar = c(4,8,4,1))
+barplot(spcount, horiz = TRUE, names.arg = rep("", 24), xlab = "Number of Photos",
+        cex.lab = 2)
+mtext(act_names, 2, at = seq(1, 28.3,length.out = 24), las = 2)
+dev.off()
+
+agconf <- dd %>% group_by(species) %>% summarise(mean_agreement = mean(agreement_confidence)) %>%
+  data.frame(.,stringsAsFactors = FALSE)
+
+agconf <- agconf[order(agconf$mean_agreement),]
+row.names(agconf) <- NULL
+
+ag <- left_join(agconf, hm, by = "species")
+tiff("mean_user.tiff", height = 7, width = 7, units = "in",
+     res = 600, compression = "lzw")
+par(mar = c(4,8,4,1))
+plot(c(1:24) ~ agconf$mean_agreement, yaxt = "n", ylab = "", bty = "n", xlim = c(0.2,1),
+     xlab = "Mean user agreement", cex.lab = 2)
+axis(2, at=seq(1,24, 1), labels=F, tck=-.02)
+mtext(ag$act_names, 2, at = seq(1, 24,length.out = 24), las = 2, line = 1)
+dev.off()
+
+axis(2, at=seq(y_limits[1],y_limits[2], 0.25), labels=F, tck=-.03)
+axes()
