@@ -15,7 +15,22 @@ folder_to_resize <- "put/path/to/folder/here"
 search_subdirs <- TRUE
 
 # are there any sub-folders that you want to skip?
+# provide a character vector of the site names you
+# would like to skip
+
 subfolders_to_skip <- NULL
+
+# Are there reference photos to sites you would like to include?
+add_ref <- TRUE
+
+# If so, where is the file located that has the file paths to
+# the reference photos? This should be a csv with two columns
+# column 1 should be 'site' and details what site the
+# photo came from 
+# column 2 should be 'reference' and has the file path to the
+# reference photos
+
+ref_loc <- "SP15_reference_photos.csv"
 
 # REGEXP to search for jpg files
 photo_file_type <- ".JPG$|.jpeg$" 
