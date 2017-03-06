@@ -62,7 +62,7 @@ if(length(folder_to_resize) == 0 |is.character(folder_to_resize)==FALSE ){
 
 # get the path names of the directory and all subdirectories
 # if search_subdirs = TRUE
-cat("Collecting file paths\n\n")
+cat("collecting file paths\n\n")
 file_paths <- unlist(list.files(path = folder_to_resize, 
            pattern = photo_file_type, # currently only takes JPG files
            recursive = search_subdirs, # we want files in the sub-directories as well
@@ -152,7 +152,6 @@ if(add_ref){
 }
 # for loop to iterate through photos
 for(i in 1:n_iters){
-  cat(paste0("Resizing batch ", i, " of ",n_iters, " batches\n\n" ))
   # make 1000 unique ids for all i less than n_iters
   if(i<n_iters){
     id <- seq(start,end,by=1 )
@@ -168,7 +167,7 @@ for(i in 1:n_iters){
                            image2 = NA,
                            file_path = file_paths[id], stringsAsFactors = FALSE)
     # get the sites
-    sites_in_manifest <- data.frame(site = strsplit(manifest$file_path, "/") %>% sapply(FUN = function(x){x[5]}), stringsAsFactors = FALSE)
+    sites_in_manifest <- data.frame(site = strsplit(manifest$file_path, "/") %>% sapply(FUN = function(x){x[length(x)-1]}), stringsAsFactors = FALSE)
     manifest$image2<- left_join( sites_in_manifest, refs, by = "site")$ref_names
     }else{
   manifest <- data.frame(id = id, 
