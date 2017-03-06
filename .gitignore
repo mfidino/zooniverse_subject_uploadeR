@@ -54,3 +54,10 @@ Temporary Items
 
 # remove log file made by panoptes-subject-uploader
 panoptes-subject-uploader.log
+
+# remove anything that has UWI in it
+*UWI*
+
+# ignore csvs and tiffs
+*.csv
+*.tiff

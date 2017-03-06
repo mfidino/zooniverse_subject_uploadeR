@@ -62,6 +62,7 @@ if(length(folder_to_resize) == 0 |is.character(folder_to_resize)==FALSE ){
 
 # get the path names of the directory and all subdirectories
 # if search_subdirs = TRUE
+cat("collecting file paths\n\n")
 file_paths <- unlist(list.files(path = folder_to_resize, 
            pattern = photo_file_type, # currently only takes JPG files
            recursive = search_subdirs, # we want files in the sub-directories as well
@@ -74,6 +75,9 @@ file_paths <- file_paths[-grep(paste(as.character(subfolders_to_skip),
                                     collapse = "|"), file_paths)]
 }
 
+
+# convert double slash to single if present
+file_paths <-gsub("//", "/", file_paths)
 # collect just the names of the photos from file_paths
 photo_names <- strsplit(file_paths, "/") %>% sapply(FUN = function(x){x[length(x)]})
 
@@ -120,10 +124,34 @@ if(crop_drop){
   im_call <- " -crop 0x0+0-100 -resize 900x600 -quality 96 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float "
     }else{
       im_call <- " -resize 900x600 -quality 96 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float "
+    }
+
+# resize the reference images
+if(add_ref){
+  cat("\n\nresizing reference photos\n\n")
+  refs <- read.csv(ref_loc, header = TRUE, stringsAsFactors = FALSE)
+  # check if there are the double backslashes, replace if so
+  if(length(grep("\\\\", refs$reference))>0){
+    refs$reference <- gsub("\\\\", "/", refs$reference)
   }
+  refs$ref_names <- strsplit(refs$reference, "/") %>% sapply(FUN = function(x){x[length(x)]})
+
+  pb <- txtProgressBar(min =1, max = nrow(refs), style = 3)
+  for(photo in 1:nrow(refs)){
+    
+    # crop out the bushnell stuff, which takes up
+    # 100 pixels on the bottom
+    system(paste0(pwq(im), pwq(refs$reference[photo]), im_call,
+                  pwq(paste0(tmp_dir, "/", refs$ref_names[photo]), space = FALSE)))
+    setTxtProgressBar(pb, photo)
+  }
+  # close the progress bar
+  close(pb)
+  # DO THE RESIZING STUFF HERE
+  cat("\n\nreference photos resized\n\n")
+}
 # for loop to iterate through photos
 for(i in 1:n_iters){
-  paste0("Resizing batch ", i, " of ",n_iters, " batches." )
   # make 1000 unique ids for all i less than n_iters
   if(i<n_iters){
     id <- seq(start,end,by=1 )
@@ -133,9 +161,19 @@ for(i in 1:n_iters){
         end <- length(photo_names)
       } # close ifelse statement
   # make the manifest
+  if(add_ref){
+    manifest <- data.frame(id = id, 
+                           image1 = photo_names[id],
+                           image2 = NA,
+                           file_path = file_paths[id], stringsAsFactors = FALSE)
+    # get the sites
+    sites_in_manifest <- data.frame(site = strsplit(manifest$file_path, "/") %>% sapply(FUN = function(x){x[length(x)-1]}), stringsAsFactors = FALSE)
+    manifest$image2<- left_join( sites_in_manifest, refs, by = "site")$ref_names
+    }else{
   manifest <- data.frame(id = id, 
                          image_name = photo_names[id],
                          file_path = file_paths[id])
+    }
   
   manifest_file_path <- paste0(tmp_dir,"/manifest_",i,".csv")
   
