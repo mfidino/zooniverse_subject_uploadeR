@@ -46,12 +46,12 @@ pwq <- function(x,space = TRUE){
   }
 }
 
+# upload the packages you need based off of the photo trigger rate
+
+packages_required <- c("dplyr", "magrittr", "exifr")
 
 # load packages
-if(length(packages_required) == 0 |is.character(packages_required)==FALSE ){
-  stop("This script requires 'packages_required' as a character string,
-        run that portion of code in upload_photos_to_zooniverse.R")
-}
+
 package_load(packages_required)
 
 # get file paths
@@ -79,8 +79,24 @@ file_paths <- file_paths[-grep(paste(as.character(subfolders_to_skip),
 # convert double slash to single if present
 file_paths <-gsub("//", "/", file_paths)
 # collect just the names of the photos from file_paths
-photo_names <- strsplit(file_paths, "/") %>% sapply(FUN = function(x){x[length(x)]})
+photo_names <- strsplit(file_paths, "/") %>% 
+  sapply(FUN = function(x){x[length(x)]})
 
+# get date and time from each of these images
+
+date_time <- exifr(file_paths, exiftoolargs = "-DateTimeOriginal")
+# determine what splits the date time stuff
+num_split <- gsub('[[:digit:]]+', '', date_time$DateTimeOriginal[1])
+# how formatted
+hf<- unlist(strsplit(num_split, ""))
+pic_format <-paste0("%Y",hf[1],"%m",hf[2],"%d",hf[3],"%H",hf[4],"%M",hf[5],"%S")
+
+date_time2 <- as.POSIXct(date_time$DateTimeOriginal, 
+  format = pic_format)
+
+a <-head(date_time2, -1)
+b <- tail(date_time2, -1)
+unq_batch <- c(1,which(b - a>5))
 # now, we want to copy the files over ~ 1000 files over to 
 # a temporary directory. First we determine how many
 # iterations of 1k photos we need to take through

@@ -5,8 +5,10 @@
 #
 #
 
-# the packages needed for zooniverse_subject_uploadeR.R to run
-packages_required <- c("dplyr", "magrittr")
+
+# how many photos are taken when a camera trap is triggered?
+
+n_photos_when_triggered <- 3
 
 # the location of the folder of photos to resize.
 folder_to_resize <- "put/path/to/folder/here" 
@@ -20,17 +22,7 @@ search_subdirs <- TRUE
 
 subfolders_to_skip <- NULL
 
-# Are there reference photos to sites you would like to include?
-add_ref <- TRUE
 
-# If so, where is the file located that has the file paths to
-# the reference photos? This should be a csv with two columns
-# column 1 should be 'site' and details what site the
-# photo came from 
-# column 2 should be 'reference' and has the file path to the
-# reference photos
-
-ref_loc <- "SP15_reference_photos.csv"
 
 # REGEXP to search for jpg files
 photo_file_type <- ".JPG$|.jpeg$" 
@@ -47,11 +39,11 @@ im <- "C:\\Program Files\\ImageMagick-7.0.2-Q16\\convert.exe"
 
 # temporary directory to to store resized photos,
 # it will create the directory if it does not already exist.
-tmp_dir <- "C:/tmp_resize"
+tmp_dir <- "C:/tmp_resize_test"
 
 # Drop 100 bottom pixels from photos? 
 # useful for removing date/time stamps from Bushnell camera traps.
-crop_drop  <- TRUE
+crop_drop  <- FALSE
 
 # Do you want to upload the photos?
 upload <- TRUE
