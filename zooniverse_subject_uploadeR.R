@@ -152,6 +152,7 @@ if(add_ref){
 }
 # for loop to iterate through photos
 for(i in 1:n_iters){
+  cat(paste0("\n\nresizing batch ", i, " of ",n_iters, " batches\n\n" ))
   # make 1000 unique ids for all i less than n_iters
   if(i<n_iters){
     id <- seq(start,end,by=1 )
