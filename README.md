@@ -3,13 +3,17 @@
 An R script that resizes camera trap photos via ImageMagick and uploads them as subjects for projects built on zooniverse.org (Panoptes) via [panoptes-subject-uploader](https://github.com/zooniverse/panoptes-subject-uploader).  
 
 ## Notes
-- This is currently built for 1 photo per subject
-- This is written to work for PCs (sorry, I don't have a Mac)
+- This is written to work for PCs 
+- This will now work for multiple photos per triggering event (i.e., you set a camera trap to take multiple photos when an animal comes across it)
 
 ## Setup
 panoptes-subject-uploader requires you to download Node.js (any version >=0.10.36). [Link to node.js site](https://nodejs.org/en/). 
 
 You will also need to download [ImageMagick](http://www.imagemagick.org/script/index.php). Make sure to click the 'Install legacy utilities (e.g. convert)' box when you install it.  Version 7.0.2 was used during the creation of these scripts.
+
+zooniverse_subject_uploadeR uses [Exiftool](https://sno.phy.queensu.ca/~phil/exiftool/) via the [exifr](https://github.com/paleolimbot/exifr) R package. As [Exiftool](https://sno.phy.queensu.ca/~phil/exiftool/) is written in Perl, you will need to download it if you have not. This can be done from [Strawberry Perl](http://strawberryperl.com/):[64-bit](http://strawberryperl.com/download/5.26.0.1/strawberry-perl-5.26.0.1-64bit.msi) (most users) or [32-bit](http://strawberryperl.com/download/5.26.0.1/strawberry-perl-5.26.0.1-32bit.msi) (advanced users).
+
+Aside from [exifr](https://github.com/paleolimbot/exifr), this software also uses the [dplyr](https://github.com/tidyverse/dplyr) and [magrittr](https://github.com/tidyverse/magrittr) packages. If you do not have these R packages downloaded zooniverse_subject_uploadeR will do it for you.
 
 Following this, you can either fork this repository or copy and paste these scripts into your favorite text editor and save them.
 
