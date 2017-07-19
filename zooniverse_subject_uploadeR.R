@@ -83,28 +83,84 @@ photo_names <- strsplit(file_paths, "/") %>%
   sapply(FUN = function(x){x[length(x)]})
 
 # get date and time from each of these images
-
 date_time <- exifr(file_paths, exiftoolargs = "-DateTimeOriginal")
+
 # determine what splits the date time stuff
 num_split <- gsub('[[:digit:]]+', '', date_time$DateTimeOriginal[1])
 # how formatted
 hf<- unlist(strsplit(num_split, ""))
+# make character object that describes how
+# the date / time is encoded on a camera trap
 pic_format <-paste0("%Y",hf[1],"%m",hf[2],"%d",hf[3],"%H",hf[4],"%M",hf[5],"%S")
 
-date_time2 <- as.POSIXct(date_time$DateTimeOriginal, 
+# convert to posix
+date_time_psx <- as.POSIXct(date_time$DateTimeOriginal, 
   format = pic_format)
 
-a <-head(date_time2, -1)
-b <- tail(date_time2, -1)
-unq_batch <- c(1,which(b - a>5))
+# number of photos in upload
+n_batch <- length(date_time_psx)
+
+#if multiple photos are taken with each trigger
+if(n_photos_when_triggered>1) {
+# where does the first photo start
+unq_batch <- c(0,which(diff(date_time_psx)>5)) + 1
+
+# holds the new_paths
+new_paths <- vector("list", length(unq_batch))
+for(i in 1:length(unq_batch)){
+  if(i == length(unq_batch)){
+    new_paths[[i]] <- file_paths[unq_batch[i]:n_batch]
+  } else {
+  new_paths[[i]] <- file_paths[unq_batch[i]:c(unq_batch[i+1]-1)]
+  }
+}
+
+# the location of the extra triggers
+extra_trig <- rev(which(sapply(new_paths, length)> n_photos_when_triggered))
+for(i in 1:length(extra_trig)){
+    # this is the number of triggering events that should
+    # have happened
+    n_triggers <- ceiling(length(new_paths[[extra_trig[i]]]) / 
+        n_photos_when_triggered)
+    # make a vector and split it into equal n_photos_when_triggered parts
+    # if there are leftovers (e.g., a 2 photo batch when there should be 3)
+    # then the last trigger is assumed to be the issue. This will likely
+    # be the case (considering the camera would have to finish it's
+    # first triggering event before a second one started)
+    trigger_batches <- split(seq(1, n_photos_when_triggered * n_triggers), 
+      ceiling(seq(1, n_photos_when_triggered * n_triggers)/
+          n_photos_when_triggered))
+    # temporary list to hold the file paths
+    temp <- vector("list", length = n_triggers)
+    for(j in 1:length(temp)){
+    temp[[j]] <- new_paths[[extra_trig[i]]][trigger_batches[[j]]]
+    }
+    # sneak temp into the correct location in new_paths
+    new_paths <- c(new_paths[1:c(extra_trig[i]-1)], 
+      temp, new_paths[c(extra_trig[i]+1):length(new_paths)])
+}
+# splits by the forward slash
+# used for image names on zooniverse
+new_photo_names <- lapply(new_paths, strsplit, "/") 
+# we need the last element from a list in a list
+# this function can be used within sapply to get it
+fn <- function(x) sapply(x, function(y){y[length(y)]})
+# this keeps it in the same structure as new_paths
+new_photo_names <- t(sapply(new_photo_names, fn))
+} else {
+  # if we just have 1 photo per trigger
+  new_paths <- file_paths
+  new_photo_names <- data.frame(photo_names, stringsAsFactors = FALSE)
+}
+
 # now, we want to copy the files over ~ 1000 files over to 
 # a temporary directory. First we determine how many
 # iterations of 1k photos we need to take through
 # photo_names
 
   # integer division 
-if(length(photo_names)>= 1000){
-  n_iters <- length(photo_names) %/% 1000
+if(length(new_paths)>= 1000){
+  n_iters <- length(new_paths) %/% 1000
   }else{
     n_iters <- 1
   }
@@ -142,30 +198,6 @@ if(crop_drop){
       im_call <- " -resize 900x600 -quality 96 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float "
     }
 
-# resize the reference images
-if(add_ref){
-  cat("\n\nresizing reference photos\n\n")
-  refs <- read.csv(ref_loc, header = TRUE, stringsAsFactors = FALSE)
-  # check if there are the double backslashes, replace if so
-  if(length(grep("\\\\", refs$reference))>0){
-    refs$reference <- gsub("\\\\", "/", refs$reference)
-  }
-  refs$ref_names <- strsplit(refs$reference, "/") %>% sapply(FUN = function(x){x[length(x)]})
-
-  pb <- txtProgressBar(min =1, max = nrow(refs), style = 3)
-  for(photo in 1:nrow(refs)){
-    
-    # crop out the bushnell stuff, which takes up
-    # 100 pixels on the bottom
-    system(paste0(pwq(im), pwq(refs$reference[photo]), im_call,
-                  pwq(paste0(tmp_dir, "/", refs$ref_names[photo]), space = FALSE)))
-    setTxtProgressBar(pb, photo)
-  }
-  # close the progress bar
-  close(pb)
-  # DO THE RESIZING STUFF HERE
-  cat("\n\nreference photos resized\n\n")
-}
 # for loop to iterate through photos
 for(i in 1:n_iters){
   # make 1000 unique ids for all i less than n_iters
@@ -173,39 +205,51 @@ for(i in 1:n_iters){
     id <- seq(start,end,by=1 )
       }else{
         # make length(photo_names) unique ids when i == n_iter
-        id <- seq(start,length(photo_names),by = 1)
-        end <- length(photo_names)
+        id <- seq(start,length(new_paths),by = 1)
+        end <- length(new_paths)
       } # close ifelse statement
   # make the manifest
-  if(add_ref){
-    manifest <- data.frame(id = id, 
-                           image1 = photo_names[id],
-                           image2 = NA,
-                           file_path = file_paths[id], stringsAsFactors = FALSE)
-    # get the sites
-    sites_in_manifest <- data.frame(site = strsplit(manifest$file_path, "/") %>% sapply(FUN = function(x){x[length(x)-1]}), stringsAsFactors = FALSE)
-    manifest$image2<- left_join( sites_in_manifest, refs, by = "site")$ref_names
-    }else{
-  manifest <- data.frame(id = id, 
-                         image_name = photo_names[id],
-                         file_path = file_paths[id])
-    }
+  # we need a number of columns equal to 1 + n_photos_when_triggers
+  manifest <- data.frame(matrix(id, nrow = length(id), 
+    ncol = 1 + n_photos_when_triggered))
+  # id and then the file names
+  colnames(manifest) <- c("id", 
+    paste0(rep("image_", n_photos_when_triggered), 
+      1:n_photos_when_triggered))
+  # put the new_photo_names in the manifest
+  manifest[,-1] <- new_photo_names[id,]
   
+  # name of manifest file
   manifest_file_path <- paste0(tmp_dir,"/manifest_",i,".csv")
-  
   
   # write the manifest to the tmp_dir
   write.csv(manifest, manifest_file_path , row.names = FALSE)
   if(resize){
   # make a progress bar
   pb <- txtProgressBar(min =start, max = end, style = 3)
-  for(photo in 1:length(id)){
+  
+  # go through and resize each photo and subject
+  # if multiple photos per trigger
+  if(n_photos_when_triggered>1){
+  for(subject in 1:length(id)){
+    for(photo in 1:n_photos_when_triggered){
     
     # crop out the bushnell stuff, which takes up
     # 100 pixels on the bottom
-    system(paste0(pwq(im), pwq(file_paths[id[photo]]), im_call,
-                  pwq(paste0(tmp_dir, "/", photo_names[id[photo]]), space = FALSE)))
-    setTxtProgressBar(pb, id[photo])
+    system(paste0(pwq(im), pwq(new_paths[id[subject]][[1]][photo]), im_call,
+                  pwq(paste0(tmp_dir, "/", new_photo_names[subject,photo]), 
+                    space = FALSE)))
+    setTxtProgressBar(pb, id[subject])
+    }
+  }
+  } else { # if only one photo per trigger
+    for(subject in 1:length(id)){
+      system(paste0(pwq(im), pwq(new_paths[id[subject]]), im_call,
+        pwq(paste0(tmp_dir, "/", new_photo_names[subject,]), 
+          space = FALSE)))
+      setTxtProgressBar(pb, id[subject])
+      
+    }
   }
   # close the progress bar
   close(pb)

@@ -6,8 +6,11 @@
 #
 
 
-# how many photos are taken when a camera trap is triggered?
 
+
+# How many photos are taken when a camera trap is triggered?
+# This will determine if photos should be grouped within a subject
+# on zooniverse.
 n_photos_when_triggered <- 3
 
 # the location of the folder of photos to resize.
