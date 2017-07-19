@@ -52,6 +52,9 @@ Temporary Items
 *.RData
 .Rhistory
 
+*.JPG
+*.JPEG
+
 # remove log file made by panoptes-subject-uploader
 panoptes-subject-uploader.log
 
