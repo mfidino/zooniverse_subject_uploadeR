@@ -245,7 +245,7 @@ for(i in 1:n_iters){
   } else { # if only one photo per trigger
     for(subject in 1:length(id)){
       system(paste0(pwq(im), pwq(new_paths[id[subject]]), im_call,
-        pwq(paste0(tmp_dir, "/", new_photo_names[subject,]), 
+        pwq(paste0(tmp_dir, "/", new_photo_names[id[subject],]), 
           space = FALSE)))
       setTxtProgressBar(pb, id[subject])
       
