@@ -264,7 +264,8 @@ for(i in 1:n_iters){
     for(photo in 1:n_photos_when_triggered){
     
     # crop out the bushnell stuff, which takes up
-    # 100 pixels on the bottom
+    # 100 pixels on the bottom 
+      if(new_paths[id[subject]][[1]][photo] == "/NA") next
     system(paste0(pwq(im), pwq(new_paths[id[subject]][[1]][photo]), im_call,
                   pwq(paste0(tmp_dir, "/", new_photo_names[subject,photo]), 
                     space = FALSE)))
