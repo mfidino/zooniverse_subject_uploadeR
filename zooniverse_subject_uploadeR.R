@@ -126,7 +126,7 @@ for(i in 1:length(unq_batch)){
 # the location of the extra triggers
 #  Extra triggers are times when there are more than n_photos_when_triggered
 #  photos.
-extra_trig <- rev(which(sapply(new_paths, length)> n_photos_when_triggered))
+extra_trig <- rev(which(lengths(new_paths)> n_photos_when_triggered))
 if(length(extra_trig)>0){
 for(i in 1:length(extra_trig)){
     # this is the number of triggering events that should
@@ -151,6 +151,23 @@ for(i in 1:length(extra_trig)){
       temp, new_paths[c(extra_trig[i]+1):length(new_paths)])
  }
 }
+
+#n actual photos per trigger
+if(!all(lengths(new_paths) == n_photos_when_triggered)){
+ new_paths <- lapply(new_paths, 'length<-', max(lengths(new_paths))) 
+ to_na <- function(x){
+   if(sum(is.na(x)>0)){
+     x[is.na(x)] <- "/NA"
+   }
+   return(x)
+ }
+ new_paths <- lapply(new_paths, to_na)
+}
+
+
+ 
+
+
 # splits by the forward slash
 # used for image names on zooniverse
 new_photo_names <- lapply(new_paths, strsplit, "/") 
