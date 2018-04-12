@@ -97,6 +97,14 @@ pic_format <-paste0("%Y",hf[1],"%m",hf[2],"%d",hf[3],"%H",hf[4],"%M",hf[5],"%S")
 date_time_psx <- as.POSIXct(date_time$DateTimeOriginal, 
   format = pic_format)
 
+# sort the photos by time instead of by file name
+time_order <- order(date_time_psx)
+if(!all(time_order == 1:length(time_order))){
+  date_time_psx <- date_time_psx[time_order]
+  file_paths <- file_paths[time_order]
+}
+
+
 # number of photos in upload
 n_batch <- length(date_time_psx)
 
@@ -116,7 +124,10 @@ for(i in 1:length(unq_batch)){
 }
 
 # the location of the extra triggers
-extra_trig <- rev(which(sapply(new_paths, length)> n_photos_when_triggered))
+#  Extra triggers are times when there are more than n_photos_when_triggered
+#  photos.
+extra_trig <- rev(which(lengths(new_paths)> n_photos_when_triggered))
+if(length(extra_trig)>0){
 for(i in 1:length(extra_trig)){
     # this is the number of triggering events that should
     # have happened
@@ -138,7 +149,25 @@ for(i in 1:length(extra_trig)){
     # sneak temp into the correct location in new_paths
     new_paths <- c(new_paths[1:c(extra_trig[i]-1)], 
       temp, new_paths[c(extra_trig[i]+1):length(new_paths)])
+ }
 }
+
+#n actual photos per trigger
+if(!all(lengths(new_paths) == n_photos_when_triggered)){
+ new_paths <- lapply(new_paths, 'length<-', max(lengths(new_paths))) 
+ to_na <- function(x){
+   if(sum(is.na(x)>0)){
+     x[is.na(x)] <- "/NA"
+   }
+   return(x)
+ }
+ new_paths <- lapply(new_paths, to_na)
+}
+
+
+ 
+
+
 # splits by the forward slash
 # used for image names on zooniverse
 new_photo_names <- lapply(new_paths, strsplit, "/") 
@@ -235,7 +264,8 @@ for(i in 1:n_iters){
     for(photo in 1:n_photos_when_triggered){
     
     # crop out the bushnell stuff, which takes up
-    # 100 pixels on the bottom
+    # 100 pixels on the bottom 
+      if(new_paths[id[subject]][[1]][photo] == "/NA") next
     system(paste0(pwq(im), pwq(new_paths[id[subject]][[1]][photo]), im_call,
                   pwq(paste0(tmp_dir, "/", new_photo_names[subject,photo]), 
                     space = FALSE)))
