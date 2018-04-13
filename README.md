@@ -5,6 +5,8 @@ An R script that resizes camera trap photos via ImageMagick and uploads them as 
 ## Notes
 - This is written to work for PCs 
 - This will now work for multiple photos per triggering event (i.e., you set a camera trap to take multiple photos when an animal comes across it)
+- For multiple photos per triggering event pictures are grouped together if they occur within 5 seconds of each other. If no delay is set between possible triggering events there is the possibility that a large number of photos can be grouped together. When this occurs, they are split apart based off of how many photos per trigger should be expected, which the user supplies to the `n_photos_when_triggered` object in `upload_photos_to_zooniverse.R`.
+- This will accomodate instances when there is variation in the number of photos per triggering event (e.g., 2 photos per trigger can be uploaded alongside 3 photos per trigger). Set `n_photos_when_triggered` to the maximum expected photos per trigger. For example, if you have between 1 and 3 photos per triggering event, set `n_photos_when_triggered` to 3.
 
 ## Setup
 panoptes-subject-uploader requires you to download Node.js (any version >=0.10.36). [Link to node.js site](https://nodejs.org/en/). 
