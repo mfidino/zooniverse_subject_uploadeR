@@ -13,7 +13,11 @@
 # on zooniverse.
 n_photos_when_triggered <- 3
 
-# the location of the folder of photos to resize.
+# the location of the folder of photos to resize. This will search through
+# folders nested inside of 'folder_to_resize' so long as search_subdirs
+# is TRUE (default value). For example, the season folder FA12 may have
+# multiple site folders inside of it. Set 'folder_to_resize' to the site
+# folder if you want to upload all of those sites.
 folder_to_resize <- "put/path/to/folder/here" 
 
 # Do you want to look through all nested folders within folder_to_resize?
