@@ -102,8 +102,8 @@ time_order <- order(date_time_psx)
 if(!all(time_order == 1:length(time_order))){
   date_time_psx <- date_time_psx[time_order]
   file_paths <- file_paths[time_order]
+  photo_names <- photo_names[time_order]
 }
-
 
 # number of photos in upload
 n_batch <- length(date_time_psx)
@@ -208,7 +208,7 @@ if(length(im) == 0 |is.character(im)==FALSE ){
 # and make sure it actually leads to convert.exe
 if(file.exists(im) == FALSE){
   stop("The location you specified to convert.exe is wrong
-        in object im is wrong.")
+        in object im.")
   }
 
 # create tmp_dir if it does not already exist
