@@ -152,9 +152,22 @@ for(i in 1:length(extra_trig)){
  }
 }
 
+# add blank rows if needed
+.add_blank <- function(x, n_pho = n_photos_when_triggered){
+  if(nrow(x) == n_pho){
+    return(x)
+  } else {
+    difference <- n_pho- nrow(x)
+    if(difference < 0) {
+      stop("You have an error with the way your batch photos are being sorted.")
+    }
+    x[nrow(x) + difference, ] <- NA
+    return(x)
+  }
+}
 #n actual photos per trigger
-if(!all(lengths(new_paths) == n_photos_when_triggered)){
- new_paths <- lapply(new_paths, 'length<-', max(lengths(new_paths))) 
+if(!all(sapply(new_paths, nrow) == n_photos_when_triggered)){
+  new_paths <- lapply(new_paths, .add_blank)
  to_na <- function(x){
    if(sum(is.na(x)>0)){
      x[is.na(x)] <- "/NA"
