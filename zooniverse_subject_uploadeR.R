@@ -131,7 +131,7 @@ if(length(extra_trig)>0){
 for(i in 1:length(extra_trig)){
     # this is the number of triggering events that should
     # have happened
-    n_triggers <- ceiling(length(new_paths[[extra_trig[i]]]) / 
+    n_triggers <- ceiling(nrow(new_paths[[extra_trig[i]]]) / 
         n_photos_when_triggered)
     # make a vector and split it into equal n_photos_when_triggered parts
     # if there are leftovers (e.g., a 2 photo batch when there should be 3)
@@ -144,7 +144,7 @@ for(i in 1:length(extra_trig)){
     # temporary list to hold the file paths
     temp <- vector("list", length = n_triggers)
     for(j in 1:length(temp)){
-    temp[[j]] <- new_paths[[extra_trig[i]]][trigger_batches[[j]]]
+    temp[[j]] <- new_paths[[extra_trig[i]]][trigger_batches[[j]],]
     }
     # sneak temp into the correct location in new_paths
     new_paths <- c(new_paths[1:c(extra_trig[i]-1)], 
