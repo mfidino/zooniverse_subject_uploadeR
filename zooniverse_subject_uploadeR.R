@@ -105,6 +105,10 @@ if(!all(time_order == 1:length(time_order))){
   photo_names <- photo_names[time_order]
 }
 
+date_time <- data.frame(file_paths = file_paths, DateTimeOriginal = date_time_psx,
+                        stringsAsFactors = FALSE)
+date_time$DateTimeOriginal <- as.character(date_time$DateTimeOriginal)
+
 # number of photos in upload
 n_batch <- length(date_time_psx)
 
@@ -176,6 +180,7 @@ if(!all(sapply(new_paths, nrow) == n_photos_when_triggered)){
  }
  new_paths <- lapply(new_paths, to_na)
 }
+
 
 
  
