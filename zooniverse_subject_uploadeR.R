@@ -183,21 +183,22 @@ if(!all(sapply(new_paths, nrow) == n_photos_when_triggered)){
 
 
 
- 
-
 
 # splits by the forward slash
 # used for image names on zooniverse
-new_photo_names <- lapply(new_paths, strsplit, "/") 
+new_photo_names <- lapply(new_paths, function(x)strsplit(x$file_paths, "/") ) 
 # we need the last element from a list in a list
 # this function can be used within sapply to get it
 fn <- function(x) sapply(x, function(y){y[length(y)]})
 # this keeps it in the same structure as new_paths
 new_photo_names <- t(sapply(new_photo_names, fn))
+# we need to collect the date time stuff in the same format
+new_photo_dates <- t(sapply(new_paths, function(x) x$DateTimeOriginal))
 } else {
   # if we just have 1 photo per trigger
   new_paths <- file_paths
   new_photo_names <- data.frame(photo_names, stringsAsFactors = FALSE)
+  new_photo_dates <- date_time$DateTimeOriginal
 }
 
 # now, we want to copy the files over ~ 1000 files over to 
