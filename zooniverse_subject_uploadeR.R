@@ -83,7 +83,7 @@ photo_names <- strsplit(file_paths, "/") %>%
   sapply(FUN = function(x){x[length(x)]})
 
 # get date and time from each of these images
-date_time <- exifr(file_paths, exiftoolargs = "-DateTimeOriginal")
+date_time <- read_exif(file_paths, tags = "DateTimeOriginal")
 
 # determine what splits the date time stuff
 num_split <- gsub('[[:digit:]]+', '', date_time$DateTimeOriginal[1])
@@ -238,15 +238,18 @@ for(i in 1:n_iters){
         end <- length(new_paths)
       } # close ifelse statement
   # make the manifest
-  # we need a number of columns equal to 1 + n_photos_when_triggers
+  # we need a number of columns equal to 1 + n_photos_when_triggers + 
+  #  length of the dt object
+  dt <- paste("#datetime", 1:n_photos_when_triggered, sep = "_")
   manifest <- data.frame(matrix(id, nrow = length(id), 
     ncol = 1 + n_photos_when_triggered))
   # id and then the file names
+  
   colnames(manifest) <- c("id", 
     paste0(rep("image_", n_photos_when_triggered), 
-      1:n_photos_when_triggered))
+      1:n_photos_when_triggered), "#dateTime")
   # put the new_photo_names in the manifest
-  manifest[,-1] <- new_photo_names[id,]
+  manifest[,-c(1, ncol(manifest))] <- new_photo_names[id,]
   
   # name of manifest file
   manifest_file_path <- paste0(tmp_dir,"/manifest_",i,".csv")
