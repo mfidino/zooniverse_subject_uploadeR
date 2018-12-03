@@ -117,16 +117,16 @@ unq_batch <- c(0,which(diff(date_time_psx)>5)) + 1
 new_paths <- vector("list", length(unq_batch))
 for(i in 1:length(unq_batch)){
   if(i == length(unq_batch)){
-    new_paths[[i]] <- file_paths[unq_batch[i]:n_batch]
+    new_paths[[i]] <- date_time[unq_batch[i]:n_batch,]
   } else {
-  new_paths[[i]] <- file_paths[unq_batch[i]:c(unq_batch[i+1]-1)]
+  new_paths[[i]] <- date_time[unq_batch[i]:c(unq_batch[i+1]-1),]
   }
 }
 
 # the location of the extra triggers
 #  Extra triggers are times when there are more than n_photos_when_triggered
 #  photos.
-extra_trig <- rev(which(lengths(new_paths)> n_photos_when_triggered))
+extra_trig <- rev(which(sapply(new_paths, nrow)> n_photos_when_triggered))
 if(length(extra_trig)>0){
 for(i in 1:length(extra_trig)){
     # this is the number of triggering events that should
@@ -239,17 +239,18 @@ for(i in 1:n_iters){
       } # close ifelse statement
   # make the manifest
   # we need a number of columns equal to 1 + n_photos_when_triggers + 
-  #  length of the dt object
-  dt <- paste("#datetime", 1:n_photos_when_triggered, sep = "_")
+  #  length of the datetime_columns object
+  datetime_columns <- paste("#datetime", 1:n_photos_when_triggered, sep = "_")
   manifest <- data.frame(matrix(id, nrow = length(id), 
-    ncol = 1 + n_photos_when_triggered))
+    ncol = 1 + n_photos_when_triggered + length(datetime_columns)))
   # id and then the file names
   
   colnames(manifest) <- c("id", 
     paste0(rep("image_", n_photos_when_triggered), 
-      1:n_photos_when_triggered), "#dateTime")
+      1:n_photos_when_triggered), datetime_columns)
   # put the new_photo_names in the manifest
-  manifest[,-c(1, ncol(manifest))] <- new_photo_names[id,]
+  manifest[,-c(1, (1 + ncol(manifest) - 
+                  length(datetime_columns)):ncol(manifest))] <- new_photo_names[id,]
   
   # name of manifest file
   manifest_file_path <- paste0(tmp_dir,"/manifest_",i,".csv")
