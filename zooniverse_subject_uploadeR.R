@@ -83,7 +83,7 @@ photo_names <- strsplit(file_paths, "/") %>%
   sapply(FUN = function(x){x[length(x)]})
 
 # get date and time from each of these images
-date_time <- exifr(file_paths, exiftoolargs = "-DateTimeOriginal")
+date_time <- read_exif(file_paths, tags = "DateTimeOriginal")
 
 # determine what splits the date time stuff
 num_split <- gsub('[[:digit:]]+', '', date_time$DateTimeOriginal[1])
@@ -105,6 +105,10 @@ if(!all(time_order == 1:length(time_order))){
   photo_names <- photo_names[time_order]
 }
 
+date_time <- data.frame(file_paths = file_paths, DateTimeOriginal = date_time_psx,
+                        stringsAsFactors = FALSE)
+date_time$DateTimeOriginal <- as.character(date_time$DateTimeOriginal)
+
 # number of photos in upload
 n_batch <- length(date_time_psx)
 
@@ -117,21 +121,21 @@ unq_batch <- c(0,which(diff(date_time_psx)>5)) + 1
 new_paths <- vector("list", length(unq_batch))
 for(i in 1:length(unq_batch)){
   if(i == length(unq_batch)){
-    new_paths[[i]] <- file_paths[unq_batch[i]:n_batch]
+    new_paths[[i]] <- date_time[unq_batch[i]:n_batch,]
   } else {
-  new_paths[[i]] <- file_paths[unq_batch[i]:c(unq_batch[i+1]-1)]
+  new_paths[[i]] <- date_time[unq_batch[i]:c(unq_batch[i+1]-1),]
   }
 }
 
 # the location of the extra triggers
 #  Extra triggers are times when there are more than n_photos_when_triggered
 #  photos.
-extra_trig <- rev(which(lengths(new_paths)> n_photos_when_triggered))
+extra_trig <- rev(which(sapply(new_paths, nrow)> n_photos_when_triggered))
 if(length(extra_trig)>0){
 for(i in 1:length(extra_trig)){
     # this is the number of triggering events that should
     # have happened
-    n_triggers <- ceiling(length(new_paths[[extra_trig[i]]]) / 
+    n_triggers <- ceiling(nrow(new_paths[[extra_trig[i]]]) / 
         n_photos_when_triggered)
     # make a vector and split it into equal n_photos_when_triggered parts
     # if there are leftovers (e.g., a 2 photo batch when there should be 3)
@@ -144,7 +148,7 @@ for(i in 1:length(extra_trig)){
     # temporary list to hold the file paths
     temp <- vector("list", length = n_triggers)
     for(j in 1:length(temp)){
-    temp[[j]] <- new_paths[[extra_trig[i]]][trigger_batches[[j]]]
+    temp[[j]] <- new_paths[[extra_trig[i]]][trigger_batches[[j]],]
     }
     # sneak temp into the correct location in new_paths
     new_paths <- c(new_paths[1:c(extra_trig[i]-1)], 
@@ -152,9 +156,22 @@ for(i in 1:length(extra_trig)){
  }
 }
 
+# add blank rows if needed
+.add_blank <- function(x, n_pho = n_photos_when_triggered){
+  if(nrow(x) == n_pho){
+    return(x)
+  } else {
+    difference <- n_pho- nrow(x)
+    if(difference < 0) {
+      stop("You have an error with the way your batch photos are being sorted.")
+    }
+    x[nrow(x) + difference, ] <- NA
+    return(x)
+  }
+}
 #n actual photos per trigger
-if(!all(lengths(new_paths) == n_photos_when_triggered)){
- new_paths <- lapply(new_paths, 'length<-', max(lengths(new_paths))) 
+if(!all(sapply(new_paths, nrow) == n_photos_when_triggered)){
+  new_paths <- lapply(new_paths, .add_blank)
  to_na <- function(x){
    if(sum(is.na(x)>0)){
      x[is.na(x)] <- "/NA"
@@ -165,21 +182,28 @@ if(!all(lengths(new_paths) == n_photos_when_triggered)){
 }
 
 
- 
 
 
 # splits by the forward slash
 # used for image names on zooniverse
-new_photo_names <- lapply(new_paths, strsplit, "/") 
+new_photo_names <- lapply(new_paths, function(x)strsplit(x$file_paths, "/") ) 
 # we need the last element from a list in a list
 # this function can be used within sapply to get it
 fn <- function(x) sapply(x, function(y){y[length(y)]})
 # this keeps it in the same structure as new_paths
 new_photo_names <- t(sapply(new_photo_names, fn))
+# we need to collect the date time stuff in the same format
+new_photo_dates <- t(sapply(new_paths, function(x) x$DateTimeOriginal))
+
 } else {
   # if we just have 1 photo per trigger
   new_paths <- file_paths
   new_photo_names <- data.frame(photo_names, stringsAsFactors = FALSE)
+  new_photo_dates <- date_time$DateTimeOriginal
+}
+# change /NA to NA again for photo dates
+if(any(new_photo_dates == "/NA")){
+  new_photo_dates[new_photo_dates == "/NA"] <- NA
 }
 
 # now, we want to copy the files over ~ 1000 files over to 
@@ -238,15 +262,20 @@ for(i in 1:n_iters){
         end <- length(new_paths)
       } # close ifelse statement
   # make the manifest
-  # we need a number of columns equal to 1 + n_photos_when_triggers
+  # we need a number of columns equal to 1 + n_photos_when_triggers + 
+  #  length of the datetime_columns object
+  datetime_columns <- paste("#datetime", 1:n_photos_when_triggered, sep = "_")
   manifest <- data.frame(matrix(id, nrow = length(id), 
-    ncol = 1 + n_photos_when_triggered))
+    ncol = 1 + n_photos_when_triggered + length(datetime_columns)))
   # id and then the file names
+  
   colnames(manifest) <- c("id", 
     paste0(rep("image_", n_photos_when_triggered), 
-      1:n_photos_when_triggered))
+      1:n_photos_when_triggered), datetime_columns)
   # put the new_photo_names in the manifest
-  manifest[,-1] <- new_photo_names[id,]
+  manifest[,grep("^image_\\w+$", colnames(manifest))] <- new_photo_names[id,]
+  # put the date-time in the manifest
+  manifest[,grep("^#datetime_\\w+$", colnames(manifest))] <- new_photo_dates[id,]
   
   # name of manifest file
   manifest_file_path <- paste0(tmp_dir,"/manifest_",i,".csv")
