@@ -194,11 +194,16 @@ fn <- function(x) sapply(x, function(y){y[length(y)]})
 new_photo_names <- t(sapply(new_photo_names, fn))
 # we need to collect the date time stuff in the same format
 new_photo_dates <- t(sapply(new_paths, function(x) x$DateTimeOriginal))
+
 } else {
   # if we just have 1 photo per trigger
   new_paths <- file_paths
   new_photo_names <- data.frame(photo_names, stringsAsFactors = FALSE)
   new_photo_dates <- date_time$DateTimeOriginal
+}
+# change /NA to NA again for photo dates
+if(any(new_photo_dates == "/NA")){
+  new_photo_dates[new_photo_dates == "/NA"] <- NA
 }
 
 # now, we want to copy the files over ~ 1000 files over to 
@@ -268,8 +273,9 @@ for(i in 1:n_iters){
     paste0(rep("image_", n_photos_when_triggered), 
       1:n_photos_when_triggered), datetime_columns)
   # put the new_photo_names in the manifest
-  manifest[,-c(1, (1 + ncol(manifest) - 
-                  length(datetime_columns)):ncol(manifest))] <- new_photo_names[id,]
+  manifest[,grep("^image_\\w+$", colnames(manifest))] <- new_photo_names[id,]
+  # put the date-time in the manifest
+  manifest[,grep("^#datetime_\\w+$", colnames(manifest))] <- new_photo_dates[id,]
   
   # name of manifest file
   manifest_file_path <- paste0(tmp_dir,"/manifest_",i,".csv")
