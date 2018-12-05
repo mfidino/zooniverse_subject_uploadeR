@@ -82,6 +82,45 @@ file_paths <-gsub("//", "/", file_paths)
 photo_names <- strsplit(file_paths, "/") %>% 
   sapply(FUN = function(x){x[length(x)]})
 
+
+if(n_photos_when_triggered > 1) {
+  
+  get_site <- function(x, y) {
+    
+    a <- strsplit(x, "")[[1]]
+    b  <- strsplit(y, "")
+    lastchar <-  sapply(b, function(z) {
+      suppressWarnings(which(!(a == z)))[1] -1
+    })
+    lastchar <- max(lastchar, na.rm = TRUE)
+    if(lastchar > 0){
+      out <- paste0(a[1:lastchar], collapse = "")
+      # drop traliing zeros and the like if they are there
+      if(grep("_\\w+$", out) == 1){
+        out <- gsub("_\\w+$","",out)
+        return(out)
+      }
+      # drop () if they are named that way
+      if(grep("\\s\\(\\w+\\)?$", out) == 1) {
+        out <- gsub("\\s\\(\\w+\\)?$","",out)
+        return(out)
+      }
+    } else {
+      out <- "one photo at site"
+    }
+    
+    return(out)
+  }
+  site_names <- rep(NA, length(photo_names))
+  cat("Extracting site info from photo name\n")
+  site_pb <- txtProgressBar(min =1, max = length(site_names), style = 3)
+  for(site in 1:length(site_names)){
+    site_names[site] <- get_site(photo_names[site], photo_names)
+    setTxtProgressBar(site_pb, site)
+  }
+  
+}
+
 # get date and time from each of these images
 date_time <- read_exif(file_paths, tags = "DateTimeOriginal")
 
@@ -99,6 +138,10 @@ date_time_psx <- as.POSIXct(date_time$DateTimeOriginal,
 
 # sort the photos by time instead of by file name
 time_order <- order(date_time_psx)
+# If multiple triggers then 
+if(n_photos_when_triggered > 1){
+  time_order <- order(site_names, date_time_psx)
+}
 if(!all(time_order == 1:length(time_order))){
   date_time_psx <- date_time_psx[time_order]
   file_paths <- file_paths[time_order]
