@@ -11,7 +11,13 @@
 # How many photos are taken when a camera trap is triggered?
 # This will determine if photos should be grouped within a subject
 # on zooniverse.
+# NOTE: If there are multiple triggers we assume that the photo
+# name contains information on what site it was taken at. 
+# if it does not then the script will not work. 
 n_photos_when_triggered <- 3
+
+
+
 
 # the location of the folder of photos to resize. This will search through
 # folders nested inside of 'folder_to_resize' so long as search_subdirs
