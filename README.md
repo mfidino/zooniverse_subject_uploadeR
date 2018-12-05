@@ -6,6 +6,9 @@ An R script that resizes camera trap photos via ImageMagick and uploads them as 
 - This is written to work for PCs 
 - This will now work for multiple photos per triggering event (i.e., you set a camera trap to take multiple photos when an animal comes across it)
 - For multiple photos per triggering event pictures are grouped together if they occur within 5 seconds of each other. If no delay is set between possible triggering events there is the possibility that a large number of photos can be grouped together. When this occurs, they are split apart based off of how many photos per trigger should be expected, which the user supplies to the `n_photos_when_triggered` object in `upload_photos_to_zooniverse.R`.
+- For multiple photos per triggering event we assume that the name of the image contains information about which site it was taken. An
+example of this would be the photo name `"CHIL - HUP1 - FA17_00001.JPG"`. The program will iterate through all the photo names to find
+ the longest matching string in photos names that do not end with numeric information. In the above example that would be `"CHIL - HUP1 - FA17"`. The trailing numbers will be removed if they end with `"_NUMBERS"` or `"(NUMBERS)"`.
 - This will accomodate instances when there is variation in the number of photos per triggering event (e.g., 2 photos per trigger can be uploaded alongside 3 photos per trigger). Set `n_photos_when_triggered` to the maximum expected photos per trigger. For example, if you have between 1 and 3 photos per triggering event, set `n_photos_when_triggered` to 3.
 
 ## Setup
