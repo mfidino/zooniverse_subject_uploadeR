@@ -13,6 +13,14 @@
 # on zooniverse.
 n_photos_when_triggered <- 3
 
+# If there are multiple photos per trigger the images will need to be
+# sorted by site and then date / time. If you include the site name
+# in the file name of the jpg and want to pull it from there set
+# this to true. Note that the function that pulls this is slow
+# because each file name must be compared to one another. 
+pull_site_from_photo <- TRUE
+
+
 # the location of the folder of photos to resize. This will search through
 # folders nested inside of 'folder_to_resize' so long as search_subdirs
 # is TRUE (default value). For example, the season folder FA12 may have
