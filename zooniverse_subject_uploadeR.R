@@ -85,40 +85,25 @@ photo_names <- strsplit(file_paths, "/") %>%
 
 if(n_photos_when_triggered > 1) {
   
-  get_site <- function(x, y) {
-    
-    a <- strsplit(x, "")[[1]]
-    b  <- strsplit(y, "")
-    lastchar <-  sapply(b, function(z) {
-      suppressWarnings(which(!(a == z)))[1] -1
-    })
-    lastchar <- max(lastchar, na.rm = TRUE)
-    if(lastchar > 0){
-      out <- paste0(a[1:lastchar], collapse = "")
-      # drop traliing zeros and the like if they are there
-      if(grep("_\\w+$", out) == 1){
-        out <- gsub("_\\w+$","",out)
-        return(out)
-      }
-      # drop () if they are named that way
-      if(grep("\\s\\(\\w+\\)?$", out) == 1) {
-        out <- gsub("\\s\\(\\w+\\)?$","",out)
-        return(out)
-      }
-    } else {
-      out <- "one photo at site"
+  get_site <- function(out = NULL, photo_type = photo_file_type) {
+    out <- gsub(photo_type, "", out)
+    if(length(grep("_\\w+$", out)) > 0 ){
+      out <- gsub("_\\w+$","",out)
     }
-    
-    return(out)
-  }
-  site_names <- rep(NA, length(photo_names))
-  cat("Extracting site info from photo name\n")
-  site_pb <- txtProgressBar(min =1, max = length(site_names), style = 3)
-  for(site in 1:length(site_names)){
-    site_names[site] <- get_site(photo_names[site], photo_names)
-    setTxtProgressBar(site_pb, site)
+    # drop () if they are named that way
+    if(length(grep("\\s\\(\\w+\\)?$", out)) > 0) {
+      out <- gsub("\\s\\(\\w+\\)?$","",out)
+    }
+  return(out)
   }
   
+  cat("Extracting site info from photo name\n")
+    site_names <- get_site(photo_names)
+  cat("These are the number of photos from each site:\n")
+  print(t(t(sort(table(site_names), decreasing = TRUE))))
+  Sys.sleep(2)
+  cat("If the site names look wrong hit escape.\n")
+  Sys.sleep(2)
 }
 
 # get date and time from each of these images
