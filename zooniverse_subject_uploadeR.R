@@ -179,9 +179,17 @@ for(i in 1:length(extra_trig)){
     temp[[j]] <- new_paths[[extra_trig[i]]][trigger_batches[[j]],]
     }
     # sneak temp into the correct location in new_paths
+    if(extra_trig[i] == length(new_paths)){
+      new_paths <- c(new_paths[1:c(extra_trig[i]-1)], 
+                     temp)
+    } else {
     new_paths <- c(new_paths[1:c(extra_trig[i]-1)], 
       temp, new_paths[c(extra_trig[i]+1):length(new_paths)])
- }
+    }
+}
+}
+if(any(sapply(new_paths, is.null))){
+  new_paths <- new_paths[!sapply(new_paths, is.null)]
 }
 
 # add blank rows if needed
@@ -198,7 +206,7 @@ for(i in 1:length(extra_trig)){
   }
 }
 #n actual photos per trigger
-if(!all(sapply(new_paths, nrow) == n_photos_when_triggered)){
+if(!all(unlist(lapply(new_paths, nrow)) == n_photos_when_triggered)){
   new_paths <- lapply(new_paths, .add_blank)
  to_na <- function(x){
    if(sum(is.na(x)>0)){
@@ -322,8 +330,8 @@ for(i in 1:n_iters){
     
     # crop out the bushnell stuff, which takes up
     # 100 pixels on the bottom 
-      if(new_paths[id[subject]][[1]][photo] == "/NA") next
-    system(paste0(pwq(im), pwq(new_paths[id[subject]][[1]][photo]), im_call,
+      if(new_paths[id[subject]][[1]][photo, "file_paths"] == "/NA") next
+    system(paste0(pwq(im), pwq(new_paths[id[subject]][[1]][photo,"file_paths"]), im_call,
                   pwq(paste0(tmp_dir, "/", new_photo_names[subject,photo]), 
                     space = FALSE)))
     setTxtProgressBar(pb, id[subject])
