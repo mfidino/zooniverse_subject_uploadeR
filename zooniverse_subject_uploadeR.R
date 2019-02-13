@@ -103,7 +103,7 @@ if(n_photos_when_triggered > 1) {
   print(t(t(sort(table(site_names), decreasing = TRUE))))
   Sys.sleep(2)
   cat("If the site names look wrong hit escape.\n")
-  Sys.sleep(2)
+  Sys.sleep(5)
 }
 
 # get date and time from each of these images
@@ -249,7 +249,7 @@ if(any(new_photo_dates == "/NA")){
 
   # integer division 
 if(length(new_paths)>= 1000){
-  n_iters <- length(new_paths) %/% 1000
+  n_iters <- ceiling(length(new_paths) / 1000)
   }else{
     n_iters <- 1
   }
@@ -332,7 +332,7 @@ for(i in 1:n_iters){
     # 100 pixels on the bottom 
       if(new_paths[id[subject]][[1]][photo, "file_paths"] == "/NA") next
     system(paste0(pwq(im), pwq(new_paths[id[subject]][[1]][photo,"file_paths"]), im_call,
-                  pwq(paste0(tmp_dir, "/", new_photo_names[subject,photo]), 
+                  pwq(paste0(tmp_dir, "/", new_photo_names[id[subject],photo]), 
                     space = FALSE)))
     setTxtProgressBar(pb, id[subject])
     }
