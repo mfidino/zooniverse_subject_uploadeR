@@ -88,6 +88,32 @@ file_paths <- file_paths[-grep(paste(as.character(subfolders_to_skip),
                                     collapse = "|"), file_paths)]
 }
 
+# get file sizes
+
+file_sizes <- file.size(file_paths)
+if(any(file_sizes == 0)){
+  file_paths <- file_paths[-which(file_sizes == 0)]
+}
+
+if(class(human_images) == "data.frame" & username == "mason_uwi"){
+  
+  human <- human_images[human_images$has_human == TRUE,]
+  
+  # get just the photo_name
+  p_name_human <- strsplit(human$human_photos, "/") %>% 
+    sapply(., function(x) x[length(x)]) %>% tolower
+  
+  p_name_images <- strsplit(file_paths , "/") %>% 
+    sapply(., function(x) x[length(x)]) %>% tolower
+  
+  human_to_go <- which(p_name_images %in% p_name_human)
+  if(length(human_to_go)> 0){
+    file_paths <- file_paths[-human_to_go]
+  }
+  
+  
+}
+
 
 # convert double slash to single if present
 file_paths <-gsub("//", "/", file_paths)
@@ -248,7 +274,7 @@ new_photo_dates <- t(sapply(new_paths, function(x) x$DateTimeOriginal))
   # if we just have 1 photo per trigger
   new_paths <- file_paths
   new_photo_names <- data.frame(photo_names, stringsAsFactors = FALSE)
-  new_photo_dates <- date_time$DateTimeOriginal
+  new_photo_dates <- matrix(date_time$DateTimeOriginal, ncol = 1, nrow = nrow(date_time))
 }
 # change /NA to NA again for photo dates
 if(any(new_photo_dates == "/NA")){
@@ -295,13 +321,18 @@ if (file.exists(tmp_dir)) {
           dir.create(file.path(tmp_dir))
         }
 if(crop_drop){
-  im_call <- " -crop 0x0+0-100 -resize 900x600 -quality 96 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float "
+  im_call <- " -background #808080  -crop 0x0+0-100 -resize 900x600 -quality 96 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float "
     }else{
       im_call <- " -resize 900x600 -quality 96 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float "
     }
 
+if(username == 'mason_uwi'){
+  im_call <- " -background #808080   -crop 0x0+0-100 -resize 900x600! -quality 96 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float -splice 35x35 -font arial -pointsize 30 -fill black -annotate +185+30 1 -annotate +485+30 2 -annotate +785+30 3 -fill #cccccc -annotate +335+25 | -annotate +635+25 | -fill black -annotate +8+135 A -annotate +8+335 B -annotate +8+535 C -fill #cccccc -annotate 90x90+10+235 | -annotate 90x90+10+435 | "
+}
+
 # for loop to iterate through photos
 for(i in 1:n_iters){
+  cat(paste("\nbatch", i, "of", n_iters, "\n"))
   # make 1000 unique ids for all i less than n_iters
   if(i<n_iters){
     id <- seq(start,end,by=1 )
@@ -365,11 +396,14 @@ for(i in 1:n_iters){
   
   # fill the parameters we need for uploading the photos
   if(upload){
-
     
+
   # log in to 
+    cat(paste0("\nCalling panoptes command line interface.\n",
+              "This does not have a progress bar for the upload process.\n"))
   system('panoptes configure', 
-         input = c(username, 'https://www.zooniverse.org',password))
+         input = c(username, 'https://www.zooniverse.org',password),
+         show.output.on.console = FALSE)
   
   # make the system call
   node_call <- paste0('panoptes subject-set upload-subjects --allow-missing ',
