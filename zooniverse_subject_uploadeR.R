@@ -8,6 +8,19 @@
 #
 #
 
+
+# Error checks
+
+# check if panoptes is downloaded
+.p_out <- system('panoptes --version', intern = TRUE)
+if(length(.p_out) != 1 |
+   substr(.p_out, 1, 8) != "Panoptes"){
+  err_mess <- paste0('\nPanoptes not downloaded.\n',
+                     'Follow instructions on:',
+                     '\nhttps://github.com/zooniverse/panoptes-cli') 
+  stop(err_mess)
+}
+
 #####################################################
 # User specified functions
 #####################################################
@@ -352,16 +365,18 @@ for(i in 1:n_iters){
   
   # fill the parameters we need for uploading the photos
   if(upload){
-  panop <- "panoptes-subject-uploader "
 
+    
+  # log in to 
+  system('panoptes configure', 
+         input = c(username, 'https://www.zooniverse.org',password))
   
   # make the system call
-  node_call <- paste0(panop, manifest_file_path,
-                      " --username ", username, " --password ", password,
-                      " --project ", project, " --workflow ", workflow,
-                      " --subject-set ", subject_set)
-  Sys.setenv(NODE_ENV="production")
+  node_call <- paste0('panoptes subject-set upload-subjects --allow-missing ',
+                      '-m image/jpg ',subject_set, ' ',
+                      manifest_file_path)
   system(node_call)
+
   
   if(delete_resized_post_upload){
     paste("Deleting resized photos (not originals)")
