@@ -103,7 +103,7 @@ system('panoptes configure',
 .try_out <- system(paste('panoptes workflow ls -p ', project), intern = TRUE,
                            show.output.on.console = FALSE)
 if(attributes(.try_out)$status == 1){
-  stop("Wrong username or password. Resource 'zooniverse_subject_uploader.R'")
+  stop("Wrong username or password. Try again.")
 }
 stop("did it work")
 
