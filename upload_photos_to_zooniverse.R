@@ -6,8 +6,6 @@
 #
 
 
-
-
 # How many photos are taken when a camera trap is triggered?
 # This will determine if photos should be grouped within a subject
 # on zooniverse.
@@ -15,9 +13,6 @@
 # name contains information on what site it was taken at. 
 # if it does not then the script will not work. 
 n_photos_when_triggered <- 3
-
-
-
 
 # the location of the folder of photos to resize. This will search through
 # folders nested inside of 'folder_to_resize' so long as search_subdirs
@@ -32,10 +27,7 @@ search_subdirs <- TRUE
 # are there any sub-folders that you want to skip?
 # provide a character vector of the site names you
 # would like to skip
-
 subfolders_to_skip <- NULL
-
-
 
 # REGEXP to search for jpg files
 photo_file_type <- ".JPG$|.jpeg$" 
@@ -73,22 +65,21 @@ delete_resized_post_upload <- FALSE
 #####################################
 
 # all of the numbers associated to subject-set, workflow, etc.
-# can be gathered on your project builder page for a project.
+#  can be gathered on your project builder page for a project.
 
 # project # is in the top left of pretty much every page
-# subject set # is a header at the top of a subject_set you click on.
-# workflow # is a header of the workflow you click on.
+#  subject set # is a header at the top of a subject_set you click on.
+#  workflow # is a header of the workflow you click on.
 
-# your username
-username <- "your_username"
-# and password
-password <- "your_password"
-# project number number
+# project number 
 project <- NA
 # your workflow number
 workflow <- NA
 # subject set, applies to all photos you are uploading
 subject_set <- NA
+# subject_uploader will ask you for your zooniverse password. Do you want
+#  it to be visible while you enter it into the console?
+hide_password <- TRUE
 
 # run zooniverse_subject_uploaderR.R
 source("zooniverse_subject_uploader.R")
