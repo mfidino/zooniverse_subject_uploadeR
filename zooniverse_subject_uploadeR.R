@@ -323,6 +323,7 @@ if(any(new_photo_dates == "/NA")){
   new_photo_dates[new_photo_dates == "/NA"] <- NA
 }
 
+
 # now, we want to copy the files over ~ 1000 files over to 
 # a temporary directory. First we determine how many
 # iterations of 1k photos we need to take through
@@ -374,7 +375,11 @@ if(.username == 'mason_uwi'){
 
 # for loop to iterate through photos
 
-
+# save these files so we can use them again
+#  in the event that not everything gets uploaded.
+saveRDS(new_photo_names, paste0(tmp_dir,"/photo_names.rds"))
+saveRDS(new_photo_dates, paste0(tmp_dir,"/photo_dates.rds"))
+saveRDS(new_paths, paste0(tmp_dir,"/photo_paths.rds"))
 
 
 for(i in 1:n_iters){
