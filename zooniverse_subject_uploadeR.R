@@ -103,9 +103,11 @@ if(hide_password){
 .password <- readline(prompt="Enter zooniverse password: ")
 }
 
+f <- tempfile()
+
 # try to log on to panoptes cli
 system('panoptes configure', 
-       input = c(.username, 'https://www.zooniverse.org',.password),
+       input = c( 'https://www.zooniverse.org',.username,.password),
        show.output.on.console = FALSE)
 .try_out <- system(paste('panoptes workflow ls -p ', project), intern = TRUE,
                            show.output.on.console = FALSE)
