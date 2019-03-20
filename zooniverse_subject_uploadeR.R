@@ -8,6 +8,30 @@
 #
 #
 
+
+# Error checks
+
+# check if panoptes is downloaded
+.p_out <- system('panoptes --version', intern = TRUE)
+if(length(.p_out) != 1 |
+   substr(.p_out, 1, 8) != "Panoptes"){
+  err_mess <- paste0('\nPanoptes not downloaded.\n',
+                     'Follow instructions on:',
+                     '\nhttps://github.com/zooniverse/panoptes-cli') 
+  stop(err_mess)
+}
+
+# check if there is an internet connection
+havingIP <- function() {
+  if (.Platform$OS.type == "windows") {
+    ipmessage <- system("ipconfig", intern = TRUE)
+  } else {
+    ipmessage <- system("ifconfig", intern = TRUE)
+  }
+  validIP <- "((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)[.]){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
+  any(grep(validIP, ipmessage))
+}
+
 #####################################################
 # User specified functions
 #####################################################
@@ -38,6 +62,9 @@ package_load<-function(packages = NULL, quiet=TRUE, verbose=FALSE, warn.conflict
 # to account for spaces in file names when making
 # a system command from R (e.g. 'Program Files')
 
+# ask for username
+
+
 pwq <- function(x,space = TRUE){
   if(space){
     paste0("\"",x,"\" ")
@@ -48,7 +75,7 @@ pwq <- function(x,space = TRUE){
 
 # upload the packages you need based off of the photo trigger rate
 
-packages_required <- c("dplyr", "magrittr", "exifr")
+packages_required <- c("dplyr", "magrittr", "exifr", "getPass")
 
 # load packages
 
@@ -59,6 +86,26 @@ if(length(folder_to_resize) == 0 |is.character(folder_to_resize)==FALSE ){
   stop("This script requires 'folder_to_resize' as a character string,
         run that portion of code in upload_photos_to_zooniverse.R")
 }
+
+
+cat("\nPlease enter your zooniverse username and password (without quotes).\n")
+.username <- readline(msg="Enter zooniverse username: ")
+if(hide_password){
+.password <- getPass(msg="Enter zooniverse password: ")
+} else {
+.password <- readline(prompt="Enter zooniverse password: ")
+}
+
+# try to log on to panoptes cli
+system('panoptes configure', 
+       input = c(.username, 'https://www.zooniverse.org',.password),
+       show.output.on.console = FALSE)
+.try_out <- system(paste('panoptes workflow ls -p ', project), intern = TRUE,
+                           show.output.on.console = FALSE)
+if(attributes(.try_out)$status == 1){
+  stop("Wrong username or password. Try again.")
+}
+stop("did it work")
 
 # get the path names of the directory and all subdirectories
 # if search_subdirs = TRUE
@@ -73,6 +120,32 @@ file_paths <- unlist(list.files(path = folder_to_resize,
 if(length(subfolders_to_skip)>0){
 file_paths <- file_paths[-grep(paste(as.character(subfolders_to_skip),
                                     collapse = "|"), file_paths)]
+}
+
+# get file sizes
+
+file_sizes <- file.size(file_paths)
+if(any(file_sizes == 0)){
+  file_paths <- file_paths[-which(file_sizes == 0)]
+}
+
+if(class(human_images) == "data.frame" & .username == "mason_uwi"){
+  
+  human <- human_images[human_images$has_human == TRUE,]
+  
+  # get just the photo_name
+  p_name_human <- strsplit(human$human_photos, "/") %>% 
+    sapply(., function(x) x[length(x)]) %>% tolower
+  
+  p_name_images <- strsplit(file_paths , "/") %>% 
+    sapply(., function(x) x[length(x)]) %>% tolower
+  
+  human_to_go <- which(p_name_images %in% p_name_human)
+  if(length(human_to_go)> 0){
+    file_paths <- file_paths[-human_to_go]
+  }
+  
+  
 }
 
 
@@ -235,7 +308,7 @@ new_photo_dates <- t(sapply(new_paths, function(x) x$DateTimeOriginal))
   # if we just have 1 photo per trigger
   new_paths <- file_paths
   new_photo_names <- data.frame(photo_names, stringsAsFactors = FALSE)
-  new_photo_dates <- date_time$DateTimeOriginal
+  new_photo_dates <- matrix(date_time$DateTimeOriginal, ncol = 1, nrow = nrow(date_time))
 }
 # change /NA to NA again for photo dates
 if(any(new_photo_dates == "/NA")){
@@ -282,13 +355,25 @@ if (file.exists(tmp_dir)) {
           dir.create(file.path(tmp_dir))
         }
 if(crop_drop){
-  im_call <- " -crop 0x0+0-100 -resize 900x600 -quality 96 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float "
+  im_call <- " -background #808080  -crop 0x0+0-100 -resize 900x600 -quality 96 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float "
     }else{
       im_call <- " -resize 900x600 -quality 96 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float "
     }
 
+if(.username == 'mason_uwi'){
+  im_call <- " -background #808080   -crop 0x0+0-100 -resize 900x600! -quality 96 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float -splice 35x35 -font arial -pointsize 30 -fill black -annotate +185+30 1 -annotate +485+30 2 -annotate +785+30 3 -fill #cccccc -annotate +335+25 | -annotate +635+25 | -fill black -annotate +8+135 A -annotate +8+335 B -annotate +8+535 C -fill #cccccc -annotate 90x90+10+235 | -annotate 90x90+10+435 | "
+}
+
 # for loop to iterate through photos
+
+
+
+
 for(i in 1:n_iters){
+  if(!havingIP()){
+    stop("no internet connection")
+  }
+  cat(paste("\nBatch", i, "of", n_iters, "\n"))
   # make 1000 unique ids for all i less than n_iters
   if(i<n_iters){
     id <- seq(start,end,by=1 )
@@ -324,6 +409,7 @@ for(i in 1:n_iters){
   
   # go through and resize each photo and subject
   # if multiple photos per trigger
+  cat('Resizing images\n')
   if(n_photos_when_triggered>1){
   for(subject in 1:length(id)){
     for(photo in 1:n_photos_when_triggered){
@@ -352,16 +438,22 @@ for(i in 1:n_iters){
   
   # fill the parameters we need for uploading the photos
   if(upload){
-  panop <- "panoptes-subject-uploader "
+    
 
+  # log in to 
+    cat(paste0("\nCalling panoptes CLI (command line interface).\n",
+              "Panoptes CLI does not have a progress bar for the upload process.\n"))
+  system('panoptes configure', 
+         input = c(.username, 'https://www.zooniverse.org',.password),
+         show.output.on.console = FALSE)
   
   # make the system call
-  node_call <- paste0(panop, manifest_file_path,
-                      " --username ", username, " --password ", password,
-                      " --project ", project, " --workflow ", workflow,
-                      " --subject-set ", subject_set)
-  Sys.setenv(NODE_ENV="production")
+  node_call <- paste0('panoptes subject-set upload-subjects --allow-missing ',
+                      '-m image/jpg ',subject_set, ' ',
+                      manifest_file_path)
   system(node_call)
+  cat(paste0('\nSubjects uploaded. Batch ', i, ' of ',n_iters,' complete.\n'))
+
   
   if(delete_resized_post_upload){
     paste("Deleting resized photos (not originals)")
