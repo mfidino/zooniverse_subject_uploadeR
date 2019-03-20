@@ -64,3 +64,5 @@ panoptes-subject-uploader.log
 # ignore csvs and tiffs
 *.csv
 *.tiff
+*.RDS
+*.rds
