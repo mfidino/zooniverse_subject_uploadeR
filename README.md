@@ -1,6 +1,6 @@
 # zooniverse_subject_uploadeR
 
-An R script that resizes camera trap photos via ImageMagick and uploads them as subjects for projects built on zooniverse.org (Panoptes) via [panoptes-subject-uploader](https://github.com/zooniverse/panoptes-subject-uploader).  
+An R script that resizes camera trap photos via ImageMagick and uploads them as subjects for projects built on zooniverse.org (Panoptes) via [panoptes command line interface](https://github.com/zooniverse/panoptes-cli).  
 
 ## Notes
 - This is written to work for PCs 
@@ -12,7 +12,7 @@ example of this would be the photo name `"CHIL - HUP1 - FA17_00001.JPG"`. The pr
 - This will accomodate instances when there is variation in the number of photos per triggering event (e.g., 2 photos per trigger can be uploaded alongside 3 photos per trigger). Set `n_photos_when_triggered` to the maximum expected photos per trigger. For example, if you have between 1 and 3 photos per triggering event, set `n_photos_when_triggered` to 3.
 
 ## Setup
-panoptes-subject-uploader requires you to download Node.js (any version >=0.10.36). [Link to node.js site](https://nodejs.org/en/). 
+panoptes-cli is written in Python, so it must be installed on your computer. Installing from [here](https://www.python.org/downloads/) will also download pip, which is also required.
 
 You will also need to download [ImageMagick](http://www.imagemagick.org/script/index.php). Make sure to click the 'Install legacy utilities (e.g. convert)' box when you install it.  Version 7.0.2 was used during the creation of these scripts.
 
@@ -20,15 +20,13 @@ zooniverse_subject_uploadeR uses [Exiftool](https://sno.phy.queensu.ca/~phil/exi
 
 Aside from [exifr](https://github.com/paleolimbot/exifr), this software also uses the [dplyr](https://github.com/tidyverse/dplyr) and [magrittr](https://github.com/tidyverse/magrittr) packages. If you do not have these R packages downloaded zooniverse_subject_uploadeR will do it for you.
 
-Following this, you can either fork this repository or copy and paste these scripts into your favorite text editor and save them.
-
 ## Use
 
 The main script that will be changed in order to upload photos is `upload_photos_to_zooniverse.R`. There are a number of objects in there that you will have to alter for your project that are then plugged into the `zooniverse_subject_uploadeR.R` script.  The purpose of each of the objects in `upload_photos_to_zooniverse.R` are commented out so you can determine what they do. Do not change the object names or `zooniverse_subject_uploadeR.R` will not work (just change the objects values).
 
 After reassinging the objects in `upload_photos_to_zooniverse.R` you can source `zooniverse_subject_uploadeR.R` (the last line of code in `upload_photos_to_zooniverse.R`). Assuming that both scripts are in your current working directory R will commence the image resizing and upload process. If there are any missing objects that are needed for uploading it should spit back a relevant error.
 
-The first progress bar you see in the `R` console is the progress made on resizing a batch of photos. The additional data printed in the `R` console following this is from the upload process via `panoptes-subject-uploader`. This script will batch process any number of photos, but does it in multiples of 1000 (the last batch is whatever is leftover).
+The first progress bar you see in the `R` console is the progress made on resizing a batch of photos. The additional data printed in the `R` console following this is from the upload process via `panoptes-cli`. This script will batch process any number of photos, but does it in multiples of 1000 (the last batch is whatever is leftover).
 
 Before uploading photos you may want to resize a test batch to make sure that the size of photos is < 600 kb. The current ImageMagick call does a sufficient job for camera trap images collected with Bushnells. 
 
