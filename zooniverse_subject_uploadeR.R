@@ -96,7 +96,7 @@ if(length(folder_to_resize) == 0 |is.character(folder_to_resize)==FALSE ){
 
 
 cat("\nPlease enter your zooniverse username and password (without quotes).\n")
-.username <- readline(msg="Enter zooniverse username: ")
+.username <- readline(prompt="Enter zooniverse username: ")
 if(hide_password){
 .password <- getPass(msg="Enter zooniverse password: ")
 } else {
@@ -109,10 +109,11 @@ system('panoptes configure',
        show.output.on.console = FALSE)
 .try_out <- system(paste('panoptes workflow ls -p ', project), intern = TRUE,
                            show.output.on.console = FALSE)
+if(!is.null(attributes(.try_out)$status)){
 if(attributes(.try_out)$status == 1){
   stop("Wrong username or password. Try again.")
 }
-stop("did it work")
+}
 
 # get the path names of the directory and all subdirectories
 # if search_subdirs = TRUE
