@@ -1,6 +1,6 @@
 # zooniverse_subject_uploadeR
 
-An R script that resizes camera trap photos via ImageMagick and uploads them as subjects for projects built on zooniverse.org (Panoptes) via [panoptes command line interface](https://github.com/zooniverse/panoptes-cli).  
+An R script that resizes camera trap photos via ImageMagick and uploads them as subjects for projects built on zooniverse.org (Panoptes) via [panoptes-cli](https://github.com/zooniverse/panoptes-cli).  
 
 ## Notes
 - This is written to work for PCs 
