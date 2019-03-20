@@ -36,12 +36,6 @@ photo_file_type <- ".JPG$|.jpeg$"
 # temporary folder?
 resize <- TRUE
 
-# location of convert.exe in ImageMagick on PC
-# Change this if convert.exe is located in some
-# other folder.  This would be the default
-# location if you download ImageMagick-7.0.2-Q16
-im <- "C:\\Program Files\\ImageMagick-7.0.2-Q16\\convert.exe"
-
 # temporary directory to to store resized photos,
 # it will create the directory if it does not already exist.
 tmp_dir <- "C:/tmp_resize_test"

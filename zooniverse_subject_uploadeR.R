@@ -8,6 +8,13 @@
 #
 #
 
+# check to see if imagemagick downloaded
+
+im <- system("where /r \"C:\\Program Files\"  convert.exe", intern = TRUE)
+if(length(im) == 0){
+  stop("convert.exe not found in imageMagick.")
+}
+
 
 # Error checks
 
