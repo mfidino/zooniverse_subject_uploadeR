@@ -96,7 +96,7 @@ if(length(folder_to_resize) == 0 |is.character(folder_to_resize)==FALSE ){
 
 
 cat("\nPlease enter your zooniverse username and password (without quotes).\n")
-.username <- readline(msg="Enter zooniverse username: ")
+.username <- readline(prompt="Enter zooniverse username: ")
 if(hide_password){
 .password <- getPass(msg="Enter zooniverse password: ")
 } else {
@@ -109,10 +109,11 @@ system('panoptes configure',
        show.output.on.console = FALSE)
 .try_out <- system(paste('panoptes workflow ls -p ', project), intern = TRUE,
                            show.output.on.console = FALSE)
+if(!is.null(attributes(.try_out)$status)){
 if(attributes(.try_out)$status == 1){
   stop("Wrong username or password. Try again.")
 }
-stop("did it work")
+}
 
 # get the path names of the directory and all subdirectories
 # if search_subdirs = TRUE
@@ -322,6 +323,7 @@ if(any(new_photo_dates == "/NA")){
   new_photo_dates[new_photo_dates == "/NA"] <- NA
 }
 
+
 # now, we want to copy the files over ~ 1000 files over to 
 # a temporary directory. First we determine how many
 # iterations of 1k photos we need to take through
@@ -373,7 +375,11 @@ if(.username == 'mason_uwi'){
 
 # for loop to iterate through photos
 
-
+# save these files so we can use them again
+#  in the event that not everything gets uploaded.
+saveRDS(new_photo_names, paste0(tmp_dir,"/photo_names.rds"))
+saveRDS(new_photo_dates, paste0(tmp_dir,"/photo_dates.rds"))
+saveRDS(new_paths, paste0(tmp_dir,"/photo_paths.rds"))
 
 
 for(i in 1:n_iters){
