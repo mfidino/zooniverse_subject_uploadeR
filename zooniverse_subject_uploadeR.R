@@ -103,8 +103,6 @@ if(hide_password){
 .password <- readline(prompt="Enter zooniverse password: ")
 }
 
-f <- tempfile()
-
 # try to log on to panoptes cli
 system('panoptes configure', 
        input = c( 'https://www.zooniverse.org',.username,.password),
