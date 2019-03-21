@@ -459,9 +459,9 @@ for(i in 1:n_iters){
   # log in to 
     cat(paste0("\nCalling panoptes CLI (command line interface).\n",
               "Panoptes CLI does not have a progress bar for the upload process.\n"))
-  #system('panoptes configure', 
-  #       input = c(.username, 'https://www.zooniverse.org',.password),
-  #       show.output.on.console = FALSE)
+  system('panoptes configure', 
+         input = c('https://www.zooniverse.org',.username ,.password),
+         show.output.on.console = FALSE)
   
   # make the system call
   node_call <- paste0('panoptes subject-set upload-subjects --allow-missing ',
