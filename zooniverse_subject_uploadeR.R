@@ -139,7 +139,8 @@ if(any(file_sizes == 0)){
   file_paths <- file_paths[-which(file_sizes == 0)]
 }
 
-if(class(human_images) == "data.frame" & .username == "mason_uwi"){
+if(.username == "mason_uwi"){
+if(class(human_images) == "data.frame"){
   
   human <- human_images[human_images$has_human == TRUE,]
   
@@ -157,7 +158,7 @@ if(class(human_images) == "data.frame" & .username == "mason_uwi"){
   
   
 }
-
+}
 
 # convert double slash to single if present
 file_paths <-gsub("//", "/", file_paths)
@@ -458,9 +459,9 @@ for(i in 1:n_iters){
   # log in to 
     cat(paste0("\nCalling panoptes CLI (command line interface).\n",
               "Panoptes CLI does not have a progress bar for the upload process.\n"))
-  system('panoptes configure', 
-         input = c(.username, 'https://www.zooniverse.org',.password),
-         show.output.on.console = FALSE)
+  #system('panoptes configure', 
+  #       input = c(.username, 'https://www.zooniverse.org',.password),
+  #       show.output.on.console = FALSE)
   
   # make the system call
   node_call <- paste0('panoptes subject-set upload-subjects --allow-missing ',
