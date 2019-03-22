@@ -354,6 +354,21 @@ n_batch <- length(date_time_psx)
 ##########################
 
 bundle_photos <- function(date_time = NULL, file_info = NULL){
+  if(!is.list(file_info) | 
+     any(!names(file_info) %in% c('folder_to_upload', 'photo_file_type', 'search_subdirs', 'max_group'))){
+    err <- paste0('the structure of file_info is incorrect.',
+                  '\n\nfile_info must be a list object that contains the following named elements:\n\n',
+                  '\t- folder_to_upload: the file path to the photos to be uploaded\n',
+                  '\t- photo_file_type:  the file type of the images (jpg or png)\n',
+                  '\t- search_subdirs:   TRUE / FALSE on whether to recursively search folder_to_upload\n',
+                  '\t- max_group: the max number of photos to group if they are within 5 seconds of one another\n\n',
+                  'EXAMPLE:\n\n',
+                  "my_file_info <- list(folder_to_upload = 'file/path/to/photos/here',\n",
+                  "                     photo_file_type = 'jpg',\n",
+                  "                     search_subdirs = TRUE,\n",
+                  "                     max_group = 1)")
+    stop(err)
+  }
   # where does the first photo start
   date_time_psx <- diff(as.POSIXct(date_time$DateTimeOriginal))
   units(date_time_psx) <-  'secs'
@@ -409,6 +424,9 @@ bundle_photos <- function(date_time = NULL, file_info = NULL){
               times = new_photo_dates))
 }
 
+##################################
+# split_bundles
+##################################
 
 split_bundles <- function(new_paths = NULL, file_info = NULL){
   
