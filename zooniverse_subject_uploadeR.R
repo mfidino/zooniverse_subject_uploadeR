@@ -371,106 +371,95 @@ bundle_photos <- function(date_time = NULL, file_info = NULL){
       new_paths[[i]] <- date_time[unq_batch[i]:c(unq_batch[i+1]-1),]
     }
   }
+  # check if we need to split bundles
+  if(any(sapply(new_paths, nrow) > file_info$max_group)){
+    new_paths <- split_bundles(new_paths)
+  }
+  # check if we need to add any NA
+  if(!all(sapply(new_paths, nrow) == file_info$max_group)){
+    .add_blank <- function(x, n_pho = file_info$max_group){
+      if(nrow(x) == n_pho){
+        return(x)
+      } else {
+        difference <- n_pho - nrow(x)
+        if(difference < 0) {
+          stop("You have an error with the way your batch photos are being sorted.")
+        }
+        x[nrow(x) + difference, ] <- NA
+        return(x)
+      }
+    }
+    new_paths <- lapply(new_paths, .add_blank)
+  }
+  
+  # splits by the forward slash
+  # used for image names on zooniverse
+  new_photo_names <- lapply(new_paths, function(x)strsplit(x$file_paths, "/") ) 
+  # we need the last element from a list in a list
+  # this keeps it in the same structure as new_paths
+  new_photo_names <- sapply(new_photo_names, function(x) sapply(x, function(y){y[length(y)]})) %>% 
+    matrix(., ncol = file_info$max_group, nrow = length(new_paths), byrow = TRUE)
+  
+  # we need to collect the date time stuff in the same format
+  new_photo_dates <- sapply(new_paths, function(x) as.character(x$DateTimeOriginal)) %>% 
+    matrix(., ncol = file_info$max_group, nrow = length(new_paths), byrow = TRUE)
+  
+  return(list(paths = new_paths,
+              names = new_photo_names,
+              times = new_photo_dates))
+}
+
+
+split_bundles <- function(new_paths = NULL, file_info = NULL){
+  
+  # it is imperative we do this backwards via rev so that our
+  #  placement of these new bundles can be correctly indexed.
+  extra_trig <- rev(which(sapply(new_paths, nrow)> file_info$max_group))
+  if(length(extra_trig)>0){
+    for(i in 1:length(extra_trig)){
+      # this is the number of triggering events that should
+      # have happened
+      n_triggers <- ceiling(nrow(new_paths[[extra_trig[i]]]) / 
+                              file_info$max_group)
+      # make a vector and split it into equal max_group parts
+      # if there are leftovers (e.g., a 2 photo batch when there should be 3)
+      # then the last trigger is assumed to be the issue. This will likely
+      # be the case (considering the camera would have to finish it's
+      # first triggering event before a second one started)
+      trigger_batches <- split(seq(1, file_info$max_group * n_triggers), 
+                               ceiling(seq(1, file_info$max_group * n_triggers)/
+                                         file_info$max_group))
+      # temporary list to hold the file paths
+      temp <- vector("list", length = n_triggers)
+      for(j in 1:length(temp)){
+        temp[[j]] <- new_paths[[extra_trig[i]]][trigger_batches[[j]],]
+      }
+      # sneak temp into the correct location in new_paths
+      # if it's the last record put it in the end
+      if(extra_trig[i] == length(new_paths)){
+        new_paths <- c(new_paths[1:c(extra_trig[i]-1)], 
+                       temp)
+      } else if(extra_trig[i] == 1){
+        # if it is the first record put it at the start
+        new_paths <- c(temp, new_paths[2:length(new_paths)])
+      } else {
+        # otherwise, sneak it in
+        new_paths <- c(new_paths[1:c(extra_trig[i]-1)], 
+                       temp, new_paths[c(extra_trig[i]+1):length(new_paths)])
+      }
+    }
+  }
+  
+  if(any(sapply(new_paths, is.null))){
+    new_paths <- new_paths[!sapply(new_paths, is.null)]
+  }
+  
+  # add blank rows if needed
+  
   return(new_paths)
 }
+  
 
-do.call("bundle_photos", list("date_time" = date_time, 
-                              "file_info" = my_file_info))
-
-
-#if multiple photos are taken with each trigger
-if(n_photos_when_triggered>1) {
-
-
-# holds the new_paths
-
-
-# the location of the extra triggers
-#  Extra triggers are times when there are more than n_photos_when_triggered
-#  photos.
-extra_trig <- rev(which(sapply(new_paths, nrow)> n_photos_when_triggered))
-if(length(extra_trig)>0){
-for(i in 1:length(extra_trig)){
-    # this is the number of triggering events that should
-    # have happened
-    n_triggers <- ceiling(nrow(new_paths[[extra_trig[i]]]) / 
-        n_photos_when_triggered)
-    # make a vector and split it into equal n_photos_when_triggered parts
-    # if there are leftovers (e.g., a 2 photo batch when there should be 3)
-    # then the last trigger is assumed to be the issue. This will likely
-    # be the case (considering the camera would have to finish it's
-    # first triggering event before a second one started)
-    trigger_batches <- split(seq(1, n_photos_when_triggered * n_triggers), 
-      ceiling(seq(1, n_photos_when_triggered * n_triggers)/
-          n_photos_when_triggered))
-    # temporary list to hold the file paths
-    temp <- vector("list", length = n_triggers)
-    for(j in 1:length(temp)){
-    temp[[j]] <- new_paths[[extra_trig[i]]][trigger_batches[[j]],]
-    }
-    # sneak temp into the correct location in new_paths
-    if(extra_trig[i] == length(new_paths)){
-      new_paths <- c(new_paths[1:c(extra_trig[i]-1)], 
-                     temp)
-    } else {
-    new_paths <- c(new_paths[1:c(extra_trig[i]-1)], 
-      temp, new_paths[c(extra_trig[i]+1):length(new_paths)])
-    }
-}
-}
-if(any(sapply(new_paths, is.null))){
-  new_paths <- new_paths[!sapply(new_paths, is.null)]
-}
-
-# add blank rows if needed
-.add_blank <- function(x, n_pho = n_photos_when_triggered){
-  if(nrow(x) == n_pho){
-    return(x)
-  } else {
-    difference <- n_pho- nrow(x)
-    if(difference < 0) {
-      stop("You have an error with the way your batch photos are being sorted.")
-    }
-    x[nrow(x) + difference, ] <- NA
-    return(x)
-  }
-}
-#n actual photos per trigger
-if(!all(unlist(lapply(new_paths, nrow)) == n_photos_when_triggered)){
-  new_paths <- lapply(new_paths, .add_blank)
- to_na <- function(x){
-   if(sum(is.na(x)>0)){
-     x[is.na(x)] <- "/NA"
-   }
-   return(x)
- }
- new_paths <- lapply(new_paths, to_na)
-}
-
-
-
-
-# splits by the forward slash
-# used for image names on zooniverse
-new_photo_names <- lapply(new_paths, function(x)strsplit(x$file_paths, "/") ) 
-# we need the last element from a list in a list
-# this function can be used within sapply to get it
-fn <- function(x) sapply(x, function(y){y[length(y)]})
-# this keeps it in the same structure as new_paths
-new_photo_names <- t(sapply(new_photo_names, fn))
-# we need to collect the date time stuff in the same format
-new_photo_dates <- t(sapply(new_paths, function(x) x$DateTimeOriginal))
-
-} else {
-  # if we just have 1 photo per trigger
-  new_paths <- file_paths
-  new_photo_names <- data.frame(photo_names, stringsAsFactors = FALSE)
-  new_photo_dates <- matrix(date_time$DateTimeOriginal, ncol = 1, nrow = nrow(date_time))
-}
-# change /NA to NA again for photo dates
-if(any(new_photo_dates == "/NA")){
-  new_photo_dates[new_photo_dates == "/NA"] <- NA
-}
 
 
 # now, we want to copy the files over ~ 1000 files over to 
