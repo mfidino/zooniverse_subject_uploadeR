@@ -136,8 +136,7 @@ get_paths <- function(file_info = NULL){
                     'EXAMPLE:\n\n',
                     "my_file_info <- list(folder_to_upload = 'file/path/to/photos/here',\n",
                     "                     photo_file_type = 'jpg',\n",
-                    "                     search_subdirs = TRUE)\n\n",
-                    "my_paths <- get_paths(file_info = my_file_info)")
+                    "                     search_subdirs = TRUE)")
     stop(err)
   }
   cat("Collecting file paths\n")
@@ -155,6 +154,8 @@ get_paths <- function(file_info = NULL){
   
   # convert double slash to single if present
   file_paths <-gsub("//", "/", file_paths)
+  
+
   
   return(file_paths)
 }
@@ -195,8 +196,75 @@ if(class(human_images) == "data.frame"){
 # convert double slash to single if present
 
 # collect just the names of the photos from file_paths
-photo_names <- strsplit(file_paths, "/") %>% 
-  sapply(FUN = function(x){x[length(x)]})
+
+# get just the photo names as well
+
+
+get_site_names <- function(file_paths = NULL, file_info = NULL){
+  # check file_paths
+  if(is.null(file_paths)){
+    stop("please supply file_paths to this function.")
+  }
+  if(!is.character(file_paths)){
+    err <- paste0('file_paths must be a character vector.\n\n',
+                  'file_paths can easily be generated with get_paths().\n\n',
+                  'EXAMPLE:\n\n',
+                  '# create file_info\n',
+                  "my_file_info <- list(folder_to_upload = 'file/path/to/photos/here',\n",
+                  "                     photo_file_type = 'jpg',\n",
+                  "                     search_subdirs = TRUE)\n\n",
+                  '# collect file paths\n',
+                  'my_files <- get_paths(my_file_info)\n\n',
+                  '# collect site names\n',
+                  'my_sites <- get_sites(my_files, my_file_info)')
+    stop(err)
+  }
+  # check file_info
+  if(is.null(file_info)){
+    stop("please supply file_info to this function.")
+  }
+  if(!is.list(file_info) | 
+     any(!names(file_info) %in% c('folder_to_upload', 'photo_file_type', 'search_subdirs'))){
+    err <- paste0('the structure of file_info is incorrect.',
+                  '\n\nfile_info must be a list object that contains the following named elements:\n\n',
+                  '\t - folder_to_upload: the file path to the photos to be uploaded\n',
+                  '\t - photo_file_type:  the file type of the images (jpg or png)\n',
+                  '\t - search_subdirs:   TRUE / FALSE on whether to recursively search folder_to_upload\n\n',
+                  'EXAMPLE:\n\n',
+                  "my_file_info <- list(folder_to_upload = 'file/path/to/photos/here',\n",
+                  "                     photo_file_type = 'jpg',\n",
+                  "                     search_subdirs = TRUE)")
+    stop(err)
+  }
+
+  # get just the file names
+  photo_names <- strsplit(file_paths, "/") %>% 
+    sapply(FUN = function(x){x[length(x)]})
+  
+  site_names <- gsub(.photo_regex(file_info$photo_file_type), "", photo_names)
+  
+  # drop numerics if the trail like 'site_0001', 'site_0002'
+  if(length(grep("_\\w+$", site_names)) > 0 ){
+    site_names <- gsub("_\\w+$","",site_names)
+  }
+  
+  # drop () if they are named that way
+  if(length(grep("\\s\\(\\w+\\)?$", site_names)) > 0) {
+    site_names <- gsub("\\s\\(\\w+\\)?$","",site_names)
+  }
+  
+  # create a summary of the sites
+  site_summary <- t(t(sort(table(site_names), decreasing = TRUE)))
+  site_summary <- data.frame(site_names = row.names(site_summary),
+                             count = site_summary[,1],
+                             stringsAsFactors = FALSE)
+  row.names(site_summary) <- 1:nrow(site_summary)
+  
+  print(site_summary)
+  
+  return(list(names = site_names, 
+              summary = site_summary))
+}
 
 
 if(n_photos_when_triggered > 1) {
