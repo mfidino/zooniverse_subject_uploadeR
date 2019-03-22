@@ -343,31 +343,47 @@ get_datetime <- function(file_paths = NULL, site_names = NULL){
                                 site_names = site_names_vec,
                                 DateTimeOriginal = date_time_psx)
   }
-  
   return(date_time)
-  
-  
 }
-
-
 
 # number of photos in upload
 n_batch <- length(date_time_psx)
 
+##########################
+# bundle photos
+##########################
+
+bundle_photos <- function(date_time = NULL, file_info = NULL){
+  # where does the first photo start
+  date_time_psx <- diff(as.POSIXct(date_time$DateTimeOriginal))
+  units(date_time_psx) <-  'secs'
+  date_time_psx <- as.numeric(date_time_psx)
+  
+  # all photos not within 5 seconds of one another are
+  #  grouped together
+  unq_batch <- c(0,which(date_time_psx>5 | date_time_psx <0)) + 1
+  
+  new_paths <- vector("list", length(unq_batch))
+  for(i in 1:length(unq_batch)){
+    if(i == length(unq_batch)){
+      new_paths[[i]] <- date_time[unq_batch[i]:nrow(date_time),]
+    } else {
+      new_paths[[i]] <- date_time[unq_batch[i]:c(unq_batch[i+1]-1),]
+    }
+  }
+  return(new_paths)
+}
+
+do.call("bundle_photos", list("date_time" = date_time, 
+                              "file_info" = my_file_info))
+
+
 #if multiple photos are taken with each trigger
 if(n_photos_when_triggered>1) {
-# where does the first photo start
-unq_batch <- c(0,which(diff(date_time_psx)>5)) + 1
+
 
 # holds the new_paths
-new_paths <- vector("list", length(unq_batch))
-for(i in 1:length(unq_batch)){
-  if(i == length(unq_batch)){
-    new_paths[[i]] <- date_time[unq_batch[i]:n_batch,]
-  } else {
-  new_paths[[i]] <- date_time[unq_batch[i]:c(unq_batch[i+1]-1),]
-  }
-}
+
 
 # the location of the extra triggers
 #  Extra triggers are times when there are more than n_photos_when_triggered
