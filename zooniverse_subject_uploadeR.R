@@ -267,9 +267,8 @@ get_site_names <- function(file_paths = NULL, file_info = NULL){
   
   # create a summary of the sites
   site_summary <- t(t(sort(table(site_names), decreasing = TRUE)))
-  site_summary <- data.frame(site_names = row.names(site_summary),
-                             count = site_summary[,1],
-                             stringsAsFactors = FALSE)
+  site_summary <- tibble::tibble(site_names = row.names(site_summary),
+                             count = site_summary[,1])
   row.names(site_summary) <- 1:nrow(site_summary)
   
   print(site_summary)
@@ -278,60 +277,73 @@ get_site_names <- function(file_paths = NULL, file_info = NULL){
               summary = site_summary))
 }
 
-
-if(n_photos_when_triggered > 1) {
+get_datetime <- function(file_paths = NULL, site_names = NULL){
+  # check file_paths
+  if(is.null(file_paths)){
+    stop("please supply file_paths to this function.")
+  }
+  if(!is.character(file_paths)){
+    err <- paste0('file_paths must be a character vector.\n\n',
+                  'file_paths can easily be generated with get_paths().\n\n',
+                  'EXAMPLE:\n\n',
+                  '# create file_info\n',
+                  "my_file_info <- list(folder_to_upload = 'file/path/to/photos/here',\n",
+                  "                     photo_file_type = 'jpg',\n",
+                  "                     search_subdirs = TRUE)\n\n",
+                  '# collect file paths\n',
+                  'my_files <- get_paths(my_file_info)\n\n',
+                  '# collect site names\n',
+                  'my_sites <- get_sites(my_files, my_file_info)')
+    stop(err)
+  }
+  cat('Collecting date time information from photos\n')
+  date_time <- read_exif(file_paths, tags = "DateTimeOriginal")
   
-  get_site <- function(out = NULL, photo_type = photo_file_type) {
-    out <- gsub(photo_type, "", out)
-    if(length(grep("_\\w+$", out)) > 0 ){
-      out <- gsub("_\\w+$","",out)
-    }
-    # drop () if they are named that way
-    if(length(grep("\\s\\(\\w+\\)?$", out)) > 0) {
-      out <- gsub("\\s\\(\\w+\\)?$","",out)
-    }
-  return(out)
+  # determine what splits the date time stuff
+  num_split <- gsub('[[:digit:]]+', '', date_time$DateTimeOriginal[1])
+  # how formatted
+  hf<- unlist(strsplit(num_split, ""))
+  
+  # make character object that describes how
+  # the date / time is encoded on a camera trap
+  pic_format <-paste0("%Y",hf[1],"%m",hf[2],"%d",hf[3],"%H",hf[4],"%M",hf[5],"%S")
+  
+  # convert to posix
+  date_time_psx <- as.POSIXct(date_time$DateTimeOriginal, 
+                              format = pic_format)
+  
+  # sort the photos by time instead of by file name
+  #  if site_names is available sort by site first
+  if(is.null(site_names)){
+    time_order <- order(date_time_psx)
+  } else {
+    time_order <- order(site_names$names, date_time_psx)
   }
   
-  cat("Extracting site info from photo name\n")
-    site_names <- get_site(photo_names)
-  cat("These are the number of photos from each site:\n")
-  print(t(t(sort(table(site_names), decreasing = TRUE))))
-  Sys.sleep(2)
-  cat("If the site names look wrong hit escape.\n")
-  Sys.sleep(5)
+    date_time_psx <- as.character(date_time_psx[time_order])
+    file_paths <- file_paths[time_order]
+    if(!is.null(site_names)){
+      site_names_vec <- site_names$names[time_order]
+    }
+  
+  # bundle everything together
+  if(is.null(site_names)){
+    date_time <- tibble::tibble(file_paths = file_paths,
+                                DateTimeOriginal = date_time_psx)
+  } else {
+    date_time <- tibble::tibble(file_paths = file_paths,
+                                site_names = site_names_vec,
+                                DateTimeOriginal = date_time_psx)
+  }
+  
+  
+  
 }
 
-# get date and time from each of these images
-date_time <- read_exif(file_paths, tags = "DateTimeOriginal")
 
-# determine what splits the date time stuff
-num_split <- gsub('[[:digit:]]+', '', date_time$DateTimeOriginal[1])
-# how formatted
-hf<- unlist(strsplit(num_split, ""))
-# make character object that describes how
-# the date / time is encoded on a camera trap
-pic_format <-paste0("%Y",hf[1],"%m",hf[2],"%d",hf[3],"%H",hf[4],"%M",hf[5],"%S")
 
-# convert to posix
-date_time_psx <- as.POSIXct(date_time$DateTimeOriginal, 
-  format = pic_format)
 
-# sort the photos by time instead of by file name
-time_order <- order(date_time_psx)
-# If multiple triggers then 
-if(n_photos_when_triggered > 1){
-  time_order <- order(site_names, date_time_psx)
-}
-if(!all(time_order == 1:length(time_order))){
-  date_time_psx <- date_time_psx[time_order]
-  file_paths <- file_paths[time_order]
-  photo_names <- photo_names[time_order]
-}
 
-date_time <- data.frame(file_paths = file_paths, DateTimeOriginal = date_time_psx,
-                        stringsAsFactors = FALSE)
-date_time$DateTimeOriginal <- as.character(date_time$DateTimeOriginal)
 
 # number of photos in upload
 n_batch <- length(date_time_psx)
