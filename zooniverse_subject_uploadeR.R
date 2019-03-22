@@ -236,16 +236,18 @@ get_site_names <- function(file_paths = NULL, file_info = NULL){
     stop("please supply file_info to this function.")
   }
   if(!is.list(file_info) | 
-     any(!names(file_info) %in% c('folder_to_upload', 'photo_file_type', 'search_subdirs'))){
+     any(!names(file_info) %in% c('folder_to_upload', 'photo_file_type', 'search_subdirs', 'max_group'))){
     err <- paste0('the structure of file_info is incorrect.',
                   '\n\nfile_info must be a list object that contains the following named elements:\n\n',
-                  '\t - folder_to_upload: the file path to the photos to be uploaded\n',
-                  '\t - photo_file_type:  the file type of the images (jpg or png)\n',
-                  '\t - search_subdirs:   TRUE / FALSE on whether to recursively search folder_to_upload\n\n',
+                  '\t- folder_to_upload: the file path to the photos to be uploaded\n',
+                  '\t- photo_file_type:  the file type of the images (jpg or png)\n',
+                  '\t- search_subdirs:   TRUE / FALSE on whether to recursively search folder_to_upload\n',
+                  '\t- max_group: the max number of photos to group if they are within 5 seconds of one another\n\n',
                   'EXAMPLE:\n\n',
                   "my_file_info <- list(folder_to_upload = 'file/path/to/photos/here',\n",
                   "                     photo_file_type = 'jpg',\n",
-                  "                     search_subdirs = TRUE)")
+                  "                     search_subdirs = TRUE,\n",
+                  "                     max_group = 1)")
     stop(err)
   }
 
@@ -277,6 +279,10 @@ get_site_names <- function(file_paths = NULL, file_info = NULL){
               summary = site_summary))
 }
 
+##############################
+# get_datetime
+##############################
+
 get_datetime <- function(file_paths = NULL, site_names = NULL){
   # check file_paths
   if(is.null(file_paths)){
@@ -289,7 +295,8 @@ get_datetime <- function(file_paths = NULL, site_names = NULL){
                   '# create file_info\n',
                   "my_file_info <- list(folder_to_upload = 'file/path/to/photos/here',\n",
                   "                     photo_file_type = 'jpg',\n",
-                  "                     search_subdirs = TRUE)\n\n",
+                  "                     search_subdirs = TRUE\n",
+                  "                     max_group = 1)\n\n",
                   '# collect file paths\n',
                   'my_files <- get_paths(my_file_info)\n\n',
                   '# collect site names\n',
