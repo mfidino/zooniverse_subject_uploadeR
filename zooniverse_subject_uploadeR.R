@@ -10,10 +10,7 @@
 
 # check to see if imagemagick downloaded
 
-im <- system("where /r \"C:\\Program Files\"  convert.exe", intern = TRUE)
-if(length(im) == 0){
-  stop("convert.exe not found in imageMagick.")
-}
+
 
 
 # Error checks
@@ -419,9 +416,11 @@ bundle_photos <- function(date_time = NULL, file_info = NULL){
   new_photo_dates <- sapply(new_paths, function(x) as.character(x$DateTimeOriginal)) %>% 
     matrix(., ncol = file_info$max_group, nrow = length(new_paths), byrow = TRUE)
   
-  return(list(paths = new_paths,
-              names = new_photo_names,
-              times = new_photo_dates))
+  to_return <- list(paths = lapply(new_paths, function(x)x$file_paths),
+                    names = new_photo_names,
+                    times = new_photo_dates)
+  class(to_return) <- "prepped_paths"
+  return(to_return)
 }
 
 ##################################
@@ -486,153 +485,135 @@ split_bundles <- function(new_paths = NULL, file_info = NULL){
 # photo_names
 
   # integer division 
-if(length(new_paths)>= 1000){
-  n_iters <- ceiling(length(new_paths) / 1000)
+
+
+resize_photos <- function(to_resize = NULL, file_info = NULL, output = NULL,
+                          crop_drop = FALSE, border = FALSE){
+  im <- system("where /r \"C:\\Program Files\"  convert.exe", intern = TRUE)
+  if(length(im) == 0){
+    stop("convert.exe not found in imageMagick.")
+  }
+  if(class(to_resize) != "prepped_paths"){
+    err <- paste0("to_resize must be of class 'prepped_paths'.\n\n",
+                  "Create to_resize with bundle_photos().\n\n",
+                  "EXAMPLE:\n\n",
+                  'my_resize <- bundle_photos(date_time = my_dates, file_info = my_file_info)\n',
+                  'resize_photos(my_resize, my_file_info)')
+    stop(err)
+  }
+  if(is.null(output)){
+    err <- paste0("the output argument is required. ",
+      "Specify file path for resized photos and manifests.")
+    stop(err)
+  }
+  
+  # create tmp_dir if it does not already exist
+  if (file.exists(output)) {
+    cat("output folder exists")
+  } else if (file.exists(output)) {
+    stop("output exists as a file. You cannot write photos into a file.")
+    # you will probably want to handle this separately
+  } else {
+    cat("output folder does not exist - creating")
+    dir.create(file.path(output))
+  }
+  
+
+  # figure out which image magick call to make.
+  if(crop_drop & !border){
+    # only crop drop
+    im_call <- " -background #808080  -crop 0x0+0-100 -resize 900x600! -quality 96 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float "
+  }else if(!crop_drop & !border){
+    # just resize
+    im_call <- " -resize 900x600! -quality 96 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float "
+  }  else if(!crop_drop & border){
+    # no crop, add border
+    im_call <- " -background #808080 -resize 900x600! -quality 96 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float -splice 35x35 -font arial -pointsize 30 -fill black -annotate +185+30 1 -annotate +485+30 2 -annotate +785+30 3 -fill #cccccc -annotate +335+25 | -annotate +635+25 | -fill black -annotate +8+135 A -annotate +8+335 B -annotate +8+535 C -fill #cccccc -annotate 90x90+10+235 | -annotate 90x90+10+435 | "
+  } else if(crop_drop & border){
+    im_call <- " -background #808080   -crop 0x0+0-100 -resize 900x600! -quality 96 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float -splice 35x35 -font arial -pointsize 30 -fill black -annotate +185+30 1 -annotate +485+30 2 -annotate +785+30 3 -fill #cccccc -annotate +335+25 | -annotate +635+25 | -fill black -annotate +8+135 A -annotate +8+335 B -annotate +8+535 C -fill #cccccc -annotate 90x90+10+235 | -annotate 90x90+10+435 | "
+  }
+  
+  # resizing images
+  
+  # figure out how many batches to do
+  
+  if(length(to_resize$new_paths)>= 500){
+    n_iters <- ceiling(length(new_paths) / 500)
   }else{
     n_iters <- 1
   }
-
-
-# set up to grab the first 1000 photos, these
-# objects get updated throughout the for loop below.
-start <- 1
-end <- 1000
-
-# check to make sure they specified im
-if(length(im) == 0 |is.character(im)==FALSE ){
-  stop("This script requires 'im' as a character string,
-        run that portion of code in upload_photos_to_zooniverse.R")
-  }
-# and make sure it actually leads to convert.exe
-if(file.exists(im) == FALSE){
-  stop("The location you specified to convert.exe is wrong
-        in object im.")
-  }
-
-# create tmp_dir if it does not already exist
-if (file.exists(tmp_dir)) {
-  cat("tmp_dir exists in mainDir and is a directory")
-    } else if (file.exists(tmp_dir)) {
-      cat("tmp_dir exists as a file! Look into this.")
-      # you will probably want to handle this separately
-        } else {
-          cat("tmp_dir does not exist - creating")
-          dir.create(file.path(tmp_dir))
-        }
-if(crop_drop){
-  im_call <- " -background #808080  -crop 0x0+0-100 -resize 900x600 -quality 96 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float "
+  
+  # set up to grab the first 500 photos, these
+  # objects get updated throughout the for loop below.
+  start <- 1
+  end <- 500
+  
+  for(i in 1:n_iters){
+    cat(paste("\nPreparing manifest", i, "of", n_iters, "\n"))
+    # make 1000 unique ids for all i less than n_iters
+    if(i<n_iters){
+      id <- seq(start,end,by=1 )
     }else{
-      im_call <- " -resize 900x600 -quality 96 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float "
-    }
-
-if(.username == 'mason_uwi'){
-  im_call <- " -background #808080   -crop 0x0+0-100 -resize 900x600! -quality 96 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float -splice 35x35 -font arial -pointsize 30 -fill black -annotate +185+30 1 -annotate +485+30 2 -annotate +785+30 3 -fill #cccccc -annotate +335+25 | -annotate +635+25 | -fill black -annotate +8+135 A -annotate +8+335 B -annotate +8+535 C -fill #cccccc -annotate 90x90+10+235 | -annotate 90x90+10+435 | "
-}
-
-# for loop to iterate through photos
-
-# save these files so we can use them again
-#  in the event that not everything gets uploaded.
-saveRDS(new_photo_names, paste0(tmp_dir,"/photo_names.rds"))
-saveRDS(new_photo_dates, paste0(tmp_dir,"/photo_dates.rds"))
-saveRDS(new_paths, paste0(tmp_dir,"/photo_paths.rds"))
-
-
-for(i in 1:n_iters){
-  if(!havingIP()){
-    stop("no internet connection")
-  }
-  cat(paste("\nBatch", i, "of", n_iters, "\n"))
-  # make 1000 unique ids for all i less than n_iters
-  if(i<n_iters){
-    id <- seq(start,end,by=1 )
-      }else{
-        # make length(photo_names) unique ids when i == n_iter
-        id <- seq(start,length(new_paths),by = 1)
-        end <- length(new_paths)
-      } # close ifelse statement
-  # make the manifest
-  # we need a number of columns equal to 1 + n_photos_when_triggers + 
-  #  length of the datetime_columns object
-  datetime_columns <- paste("#datetime", 1:n_photos_when_triggered, sep = "_")
-  manifest <- data.frame(matrix(id, nrow = length(id), 
-    ncol = 1 + n_photos_when_triggered + length(datetime_columns)))
-  # id and then the file names
-  
-  colnames(manifest) <- c("id", 
-    paste0(rep("image_", n_photos_when_triggered), 
-      1:n_photos_when_triggered), datetime_columns)
-  # put the new_photo_names in the manifest
-  manifest[,grep("^image_\\w+$", colnames(manifest))] <- new_photo_names[id,]
-  # put the date-time in the manifest
-  manifest[,grep("^#datetime_\\w+$", colnames(manifest))] <- new_photo_dates[id,]
-  
-  # name of manifest file
-  manifest_file_path <- paste0(tmp_dir,"/manifest_",i,".csv")
-  
-  # write the manifest to the tmp_dir
-  write.csv(manifest, manifest_file_path , row.names = FALSE)
-  if(resize){
-  # make a progress bar
-  pb <- txtProgressBar(min =start, max = end, style = 3)
-  
-  # go through and resize each photo and subject
-  # if multiple photos per trigger
-  cat('Resizing images\n')
-  if(n_photos_when_triggered>1){
-  for(subject in 1:length(id)){
-    for(photo in 1:n_photos_when_triggered){
+      # make length(photo_names) unique ids when i == n_iter
+      id <- seq(start,length(to_resize$paths),by = 1)
+      end <- length(to_resize$paths)
+    } # close ifelse statement
+    # make the manifest
+    # we need a number of columns equal to 1 + n_photos_when_triggers + 
+    #  length of the datetime_columns object
+    datetime_columns <- paste("#datetime", 1:file_info$max_group, sep = "_")
+    manifest <- data.frame(matrix(id, nrow = length(id), 
+                                  ncol = 1 + file_info$max_group + length(datetime_columns)))
+    # id and then the file names
     
-    # crop out the bushnell stuff, which takes up
-    # 100 pixels on the bottom 
-      if(new_paths[id[subject]][[1]][photo, "file_paths"] == "/NA") next
-    system(paste0(pwq(im), pwq(new_paths[id[subject]][[1]][photo,"file_paths"]), im_call,
-                  pwq(paste0(tmp_dir, "/", new_photo_names[id[subject],photo]), 
-                    space = FALSE)))
-    setTxtProgressBar(pb, id[subject])
+    colnames(manifest) <- c("id", 
+                            paste0(rep("image_", file_info$max_group), 
+                                   1:file_info$max_group), datetime_columns)
+    # put the new_photo_names in the manifest
+    manifest[,grep("^image_\\w+$", colnames(manifest))] <- to_resize$names[id,]
+    # put the date-time in the manifest
+    manifest[,grep("^#datetime_\\w+$", colnames(manifest))] <- to_resize$times[id,]
+    
+    # name of manifest file
+    manifest_file_path <- paste0(output,"/manifest_",i,".csv")
+    
+    # write the manifest to the tmp_dir
+    write.csv(manifest, manifest_file_path , row.names = FALSE)
+      # go through and resize each photo and subject
+      # if multiple photos per trigger
+      cat('Resizing images\n')
+      if(file_info$max_group>1){
+        for(subject in 1:length(id)){
+          for(photo in 1:file_info$max_group){
+            
+            # crop out the bushnell stuff, which takes up
+            # 100 pixels on the bottom 
+            if(is.na(to_resize$paths[id[subject]][[1]][photo, "file_paths"])) next
+            system(paste0(pwq(im), pwq(to_resize$paths[id[subject]][[1]][photo,"file_paths"]), im_call,
+                          pwq(paste0(output, "/", to_resize$names[id[subject],photo]), 
+                              space = FALSE)))
+          }
+        }
+      } else { # if only one photo per trigger
+        for(subject in 1:length(id)){
+          system(paste0(pwq(im), pwq(to_resize$paths[id[subject]]), im_call,
+                        pwq(paste0(output, "/", to_resize$names[id[subject],]), 
+                            space = FALSE)))
+        }
+      }
+      # modify the start and ends for the next batch to upload
+      start <- end + 1
+      end <- end + 500
     }
-  }
-  } else { # if only one photo per trigger
-    for(subject in 1:length(id)){
-      system(paste0(pwq(im), pwq(new_paths[id[subject]]), im_call,
-        pwq(paste0(tmp_dir, "/", new_photo_names[id[subject],]), 
-          space = FALSE)))
-      setTxtProgressBar(pb, id[subject])
-      
-    }
-  }
-  # close the progress bar
-  close(pb)
-  }
-  
-  # fill the parameters we need for uploading the photos
-  if(upload){
     
 
-  # log in to 
-    cat(paste0("\nCalling panoptes CLI (command line interface).\n",
-              "Panoptes CLI does not have a progress bar for the upload process.\n"))
-  system('panoptes configure', 
-         input = c('https://www.zooniverse.org',.username ,.password),
-         show.output.on.console = FALSE)
-  
-  # make the system call
-  node_call <- paste0('panoptes subject-set upload-subjects --allow-missing ',
-                      '-m image/jpg ',subject_set, ' ',
-                      manifest_file_path)
-  system(node_call)
-  cat(paste0('\nSubjects uploaded. Batch ', i, ' of ',n_iters,' complete.\n'))
-
-  
-  if(delete_resized_post_upload){
-    paste("Deleting resized photos (not originals)")
-    file.remove(list.files(tmp_dir, full.names = TRUE))
-    }
+    
+ 
   }
+  
+  
+  
 
-  # modify the start and ends for the next batch to upload
-  start <- end + 1
-  end <- end + 1000
-}
+
 
 
