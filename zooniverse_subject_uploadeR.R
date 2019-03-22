@@ -8,33 +8,6 @@
 #
 #
 
-# check to see if imagemagick downloaded
-
-
-
-
-# Error checks
-
-# check if panoptes is downloaded
-.p_out <- system('panoptes --version', intern = TRUE)
-if(length(.p_out) != 1 |
-   substr(.p_out, 1, 8) != "Panoptes"){
-  err_mess <- paste0('\nPanoptes not downloaded.\n',
-                     'Follow instructions on:',
-                     '\nhttps://github.com/zooniverse/panoptes-cli') 
-  stop(err_mess)
-}
-
-# check if there is an internet connection
-havingIP <- function() {
-  if (.Platform$OS.type == "windows") {
-    ipmessage <- system("ipconfig", intern = TRUE)
-  } else {
-    ipmessage <- system("ifconfig", intern = TRUE)
-  }
-  validIP <- "((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)[.]){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
-  any(grep(validIP, ipmessage))
-}
 
 #####################################################
 # User specified functions
@@ -90,30 +63,6 @@ if(length(folder_to_resize) == 0 |is.character(folder_to_resize)==FALSE ){
   stop("This script requires 'folder_to_resize' as a character string,
         run that portion of code in upload_photos_to_zooniverse.R")
 }
-
-
-#cat("\nPlease enter your zooniverse username and password (without quotes).\n")
-#.username <- readline(prompt="Enter zooniverse username: ")
-#if(hide_password){
-#.password <- getPass(msg="Enter zooniverse password: ")
-#} else {
-#.password <- readline(prompt="Enter zooniverse password: ")
-#}
-#
-## try to log on to panoptes cli
-#system('panoptes configure', 
-#       input = c( 'https://www.zooniverse.org',.username,.password),
-#       show.output.on.console = FALSE)
-#.try_out <- system(paste('panoptes workflow ls -p ', project), intern = TRUE,
-#                           show.output.on.console = FALSE)
-#if(!is.null(attributes(.try_out)$status)){
-#if(attributes(.try_out)$status == 1){
-#  stop("Wrong username or password. Try again.")
-#}
-#}
-
-# get the path names of the directory and all subdirectories
-# if search_subdirs = TRUE
 
 ##################
 # photo_regex
@@ -537,8 +486,8 @@ resize_photos <- function(to_resize = NULL, file_info = NULL, output = NULL,
   
   # figure out how many batches to do
   
-  if(length(to_resize$new_paths)>= 500){
-    n_iters <- ceiling(length(new_paths) / 500)
+  if(length(to_resize$paths)>= 500){
+    n_iters <- ceiling(length(to_resize$paths) / 500)
   }else{
     n_iters <- 1
   }
@@ -581,7 +530,6 @@ resize_photos <- function(to_resize = NULL, file_info = NULL, output = NULL,
     write.csv(manifest, manifest_file_path , row.names = FALSE)
       # go through and resize each photo and subject
       # if multiple photos per trigger
-      cat('Resizing images\n')
       if(file_info$max_group>1){
         for(subject in 1:length(id)){
           for(photo in 1:file_info$max_group){
@@ -605,10 +553,6 @@ resize_photos <- function(to_resize = NULL, file_info = NULL, output = NULL,
       start <- end + 1
       end <- end + 500
     }
-    
-
-    
- 
   }
   
   
