@@ -127,7 +127,7 @@ if(length(folder_to_resize) == 0 |is.character(folder_to_resize)==FALSE ){
 
 get_paths <- function(file_info = NULL){
   if(!is.list(file_info) | 
-     any(!names(file_info) %in% c('folder_to_resize', 'photo_file_type', 'search_subdirs'))){
+     any(!names(file_info) %in% c('folder_to_upload', 'photo_file_type', 'search_subdirs'))){
       err <- paste0('the structure of file_info is incorrect.',
                     '\n\nfile_info must be a list object that contains the following named elements:\n\n',
                     '\t - folder_to_upload: the file path to the photos to be uploaded\n',
@@ -146,22 +146,30 @@ get_paths <- function(file_info = NULL){
                                   recursive = file_info$search_subdirs, 
                                   full.names = TRUE, 
                                   ignore.case = TRUE)) 
+  
+  # drop corrupted files that are 0 kb 
+  file_sizes <- file.size(file_paths)
+  if(any(file_sizes == 0)){
+    file_paths <- file_paths[-which(file_sizes == 0)]
+  }
+  
+  # convert double slash to single if present
+  file_paths <-gsub("//", "/", file_paths)
+  
   return(file_paths)
 }
 
 
+
 # remove the subfolders that are in subfolders to skip
-if(length(subfolders_to_skip)>0){
-file_paths <- file_paths[-grep(paste(as.character(subfolders_to_skip),
-                                    collapse = "|"), file_paths)]
-}
+#if(length(subfolders_to_skip)>0){
+#file_paths <- file_paths[-grep(paste(as.character(subfolders_to_skip),
+#                                    collapse = "|"), file_paths)]
+#}
 
 # get file sizes
 
-file_sizes <- file.size(file_paths)
-if(any(file_sizes == 0)){
-  file_paths <- file_paths[-which(file_sizes == 0)]
-}
+
 
 if(.username == "mason_uwi"){
 if(class(human_images) == "data.frame"){
@@ -185,7 +193,7 @@ if(class(human_images) == "data.frame"){
 }
 
 # convert double slash to single if present
-file_paths <-gsub("//", "/", file_paths)
+
 # collect just the names of the photos from file_paths
 photo_names <- strsplit(file_paths, "/") %>% 
   sapply(FUN = function(x){x[length(x)]})
