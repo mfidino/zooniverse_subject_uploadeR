@@ -336,12 +336,10 @@ get_datetime <- function(file_paths = NULL, site_names = NULL){
                                 DateTimeOriginal = date_time_psx)
   }
   
+  return(date_time)
   
   
 }
-
-
-
 
 
 
