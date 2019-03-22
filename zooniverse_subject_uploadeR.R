@@ -95,34 +95,60 @@ if(length(folder_to_resize) == 0 |is.character(folder_to_resize)==FALSE ){
 }
 
 
-cat("\nPlease enter your zooniverse username and password (without quotes).\n")
-.username <- readline(prompt="Enter zooniverse username: ")
-if(hide_password){
-.password <- getPass(msg="Enter zooniverse password: ")
-} else {
-.password <- readline(prompt="Enter zooniverse password: ")
-}
-
-# try to log on to panoptes cli
-system('panoptes configure', 
-       input = c( 'https://www.zooniverse.org',.username,.password),
-       show.output.on.console = FALSE)
-.try_out <- system(paste('panoptes workflow ls -p ', project), intern = TRUE,
-                           show.output.on.console = FALSE)
-if(!is.null(attributes(.try_out)$status)){
-if(attributes(.try_out)$status == 1){
-  stop("Wrong username or password. Try again.")
-}
-}
+#cat("\nPlease enter your zooniverse username and password (without quotes).\n")
+#.username <- readline(prompt="Enter zooniverse username: ")
+#if(hide_password){
+#.password <- getPass(msg="Enter zooniverse password: ")
+#} else {
+#.password <- readline(prompt="Enter zooniverse password: ")
+#}
+#
+## try to log on to panoptes cli
+#system('panoptes configure', 
+#       input = c( 'https://www.zooniverse.org',.username,.password),
+#       show.output.on.console = FALSE)
+#.try_out <- system(paste('panoptes workflow ls -p ', project), intern = TRUE,
+#                           show.output.on.console = FALSE)
+#if(!is.null(attributes(.try_out)$status)){
+#if(attributes(.try_out)$status == 1){
+#  stop("Wrong username or password. Try again.")
+#}
+#}
 
 # get the path names of the directory and all subdirectories
 # if search_subdirs = TRUE
-cat("collecting file paths\n\n")
-file_paths <- unlist(list.files(path = folder_to_resize, 
-           pattern = photo_file_type, # currently only takes JPG files
-           recursive = search_subdirs, # we want files in the sub-directories as well
-           full.names = TRUE, # get the entire file names
-           ignore.case = TRUE)) #get .jpg or .JPG
+
+.photo_regex <- function(x){
+  switch(tolower(x),
+         'jpg'  = ".JPG$|.jpeg$",
+         'jpeg' = ".JPG$|.jpeg$",
+         'png'  = ".PNG|.png")
+}
+
+get_paths <- function(file_info = NULL){
+  if(!is.list(file_info) | 
+     any(!names(file_info) %in% c('folder_to_resize', 'photo_file_type', 'search_subdirs'))){
+      err <- paste0('the structure of file_info is incorrect.',
+                    '\n\nfile_info must be a list object that contains the following named elements:\n\n',
+                    '\t - folder_to_upload: the file path to the photos to be uploaded\n',
+                    '\t - photo_file_type:  the file type of the images (jpg or png)\n',
+                    '\t - search_subdirs:   TRUE / FALSE on whether to recursively search folder_to_upload\n\n',
+                    'EXAMPLE:\n\n',
+                    "my_file_info <- list(folder_to_upload = 'file/path/to/photos/here',\n",
+                    "                     photo_file_type = 'jpg',\n",
+                    "                     search_subdirs = TRUE)\n\n",
+                    "my_paths <- get_paths(file_info = my_file_info)")
+    stop(err)
+  }
+  cat("Collecting file paths\n")
+  file_paths <- unlist(list.files(path = file_info$folder_to_upload, 
+                                  pattern = .photo_regex(file_info$photo_file_type), 
+                                  recursive = file_info$search_subdirs, 
+                                  full.names = TRUE, 
+                                  ignore.case = TRUE)) 
+  return(file_paths)
+}
+
 
 # remove the subfolders that are in subfolders to skip
 if(length(subfolders_to_skip)>0){
