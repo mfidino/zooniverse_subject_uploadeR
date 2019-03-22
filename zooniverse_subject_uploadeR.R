@@ -144,16 +144,18 @@ photo_regex <- function(x){
 
 get_paths <- function(file_info = NULL){
   if(!is.list(file_info) | 
-     any(!names(file_info) %in% c('folder_to_upload', 'photo_file_type', 'search_subdirs'))){
-      err <- paste0('the structure of file_info is incorrect.',
-                    '\n\nfile_info must be a list object that contains the following named elements:\n\n',
-                    '\t - folder_to_upload: the file path to the photos to be uploaded\n',
-                    '\t - photo_file_type:  the file type of the images (jpg or png)\n',
-                    '\t - search_subdirs:   TRUE / FALSE on whether to recursively search folder_to_upload\n\n',
-                    'EXAMPLE:\n\n',
-                    "my_file_info <- list(folder_to_upload = 'file/path/to/photos/here',\n",
-                    "                     photo_file_type = 'jpg',\n",
-                    "                     search_subdirs = TRUE)")
+     any(!names(file_info) %in% c('folder_to_upload', 'photo_file_type', 'search_subdirs', 'max_group'))){
+    err <- paste0('the structure of file_info is incorrect.',
+                  '\n\nfile_info must be a list object that contains the following named elements:\n\n',
+                  '\t- folder_to_upload: the file path to the photos to be uploaded\n',
+                  '\t- photo_file_type:  the file type of the images (jpg or png)\n',
+                  '\t- search_subdirs:   TRUE / FALSE on whether to recursively search folder_to_upload\n',
+                  '\t- max_group: the max number of photos to group if they are within 5 seconds of one another\n\n',
+                  'EXAMPLE:\n\n',
+                  "my_file_info <- list(folder_to_upload = 'file/path/to/photos/here',\n",
+                  "                     photo_file_type = 'jpg',\n",
+                  "                     search_subdirs = TRUE,\n",
+                  "                     max_group = 1)")
     stop(err)
   }
   cat("Collecting file paths\n")
@@ -271,7 +273,6 @@ get_site_names <- function(file_paths = NULL, file_info = NULL){
   site_summary <- t(t(sort(table(site_names), decreasing = TRUE)))
   site_summary <- tibble::tibble(site_names = row.names(site_summary),
                              count = site_summary[,1])
-  row.names(site_summary) <- 1:nrow(site_summary)
   
   print(site_summary)
   
