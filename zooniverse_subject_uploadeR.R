@@ -118,12 +118,29 @@ if(length(folder_to_resize) == 0 |is.character(folder_to_resize)==FALSE ){
 # get the path names of the directory and all subdirectories
 # if search_subdirs = TRUE
 
-.photo_regex <- function(x){
-  switch(tolower(x),
-         'jpg'  = ".JPG$|.jpeg$",
-         'jpeg' = ".JPG$|.jpeg$",
-         'png'  = ".PNG|.png")
+##################
+# photo_regex
+##################
+photo_regex <- function(x){
+  to_return <- switch(tolower(x),
+                      'jpg'  = ".JPG$|.jpeg$",
+                      'jpeg' = ".JPG$|.jpeg$",
+                      'png'  = ".PNG|.png")
+  if(is.null(to_return)){
+    err <- paste0('file_info$photo_file_type must take one of the following values:\n',
+                  "\t- 'jpg'\n",
+                  "\t- 'jpeg'\n",
+                  "\t- 'JPG'\n",
+                  "\t- 'png'\n",
+                  "\t- 'PNG'")
+    stop(err)
+  }
+  return(to_return)
 }
+
+###########################
+# get_paths
+###########################
 
 get_paths <- function(file_info = NULL){
   if(!is.list(file_info) | 
@@ -141,7 +158,7 @@ get_paths <- function(file_info = NULL){
   }
   cat("Collecting file paths\n")
   file_paths <- unlist(list.files(path = file_info$folder_to_upload, 
-                                  pattern = .photo_regex(file_info$photo_file_type), 
+                                  pattern = photo_regex(file_info$photo_file_type), 
                                   recursive = file_info$search_subdirs, 
                                   full.names = TRUE, 
                                   ignore.case = TRUE)) 
@@ -159,8 +176,6 @@ get_paths <- function(file_info = NULL){
   
   return(file_paths)
 }
-
-
 
 # remove the subfolders that are in subfolders to skip
 #if(length(subfolders_to_skip)>0){
@@ -193,12 +208,9 @@ if(class(human_images) == "data.frame"){
 }
 }
 
-# convert double slash to single if present
-
-# collect just the names of the photos from file_paths
-
-# get just the photo names as well
-
+#################################
+# get_site_names
+#################################
 
 get_site_names <- function(file_paths = NULL, file_info = NULL){
   # check file_paths
@@ -241,7 +253,7 @@ get_site_names <- function(file_paths = NULL, file_info = NULL){
   photo_names <- strsplit(file_paths, "/") %>% 
     sapply(FUN = function(x){x[length(x)]})
   
-  site_names <- gsub(.photo_regex(file_info$photo_file_type), "", photo_names)
+  site_names <- gsub(photo_regex(file_info$photo_file_type), "", photo_names)
   
   # drop numerics if the trail like 'site_0001', 'site_0002'
   if(length(grep("_\\w+$", site_names)) > 0 ){
