@@ -32,7 +32,7 @@ resize_photos(to_resize, my_file_info,
 # upload the photos, this will open up a command prompt and execute
 #  a batch file to upload each manifest file in your output folder.
 upload_photos(output = "output/folder/location",
-              subject_set = 74127)
+              subject_set = PUT_NUMERIC_ID_HERE)
 
 
 
