@@ -337,7 +337,7 @@ bundle_photos <- function(date_time = NULL, fileinfo = NULL){
   }
   # check if we need to split bundles
   if(any(sapply(new_paths, nrow) > fileinfo$max_group)){
-    new_paths <- split_bundles(new_paths)
+    new_paths <- split_bundles(new_paths = new_paths, fileinfo = fileinfo)
   }
   # check if we need to add any NA
   if(!all(sapply(new_paths, nrow) == fileinfo$max_group)){
@@ -384,12 +384,10 @@ split_bundles <- function(new_paths = NULL, fileinfo = NULL){
   # it is imperative we do this backwards via rev so that our
   #  placement of these new bundles can be correctly indexed.
   extra_trig <- rev(which(sapply(new_paths, nrow)> fileinfo$max_group))
-  if(length(extra_trig)>0){
-    for(i in 1:length(extra_trig)){
+    for(extra in 1:length(extra_trig)){
       # this is the number of triggering events that should
       # have happened
-      n_triggers <- ceiling(nrow(new_paths[[extra_trig[i]]]) / 
-                              fileinfo$max_group)
+      n_triggers <- ceiling(nrow(new_paths[[extra_trig[extra]]]) / fileinfo$max_group)
       # make a vector and split it into equal max_group parts
       # if there are leftovers (e.g., a 2 photo batch when there should be 3)
       # then the last trigger is assumed to be the issue. This will likely
@@ -401,23 +399,23 @@ split_bundles <- function(new_paths = NULL, fileinfo = NULL){
       # temporary list to hold the file paths
       temp <- vector("list", length = n_triggers)
       for(j in 1:length(temp)){
-        temp[[j]] <- new_paths[[extra_trig[i]]][trigger_batches[[j]],]
+        temp[[j]] <- new_paths[[extra_trig[extra]]][trigger_batches[[j]],]
       }
       # sneak temp into the correct location in new_paths
       # if it's the last record put it in the end
-      if(extra_trig[i] == length(new_paths)){
-        new_paths <- c(new_paths[1:c(extra_trig[i]-1)], 
+      if(extra_trig[extra] == length(new_paths)){
+        new_paths <- c(new_paths[1:c(extra_trig[extra]-1)], 
                        temp)
-      } else if(extra_trig[i] == 1){
+      } else if(extra_trig[extra] == 1){
         # if it is the first record put it at the start
         new_paths <- c(temp, new_paths[2:length(new_paths)])
-      } else {
+      } else{
         # otherwise, sneak it in
-        new_paths <- c(new_paths[1:c(extra_trig[i]-1)], 
-                       temp, new_paths[c(extra_trig[i]+1):length(new_paths)])
+        new_paths <- c(new_paths[1:c(extra_trig[extra]-1)], 
+                       temp, new_paths[c(extra_trig[extra]+1):length(new_paths)])
       }
     }
-  }
+  
   
   if(any(sapply(new_paths, is.null))){
     new_paths <- new_paths[!sapply(new_paths, is.null)]
@@ -460,7 +458,7 @@ resize_photos <- function(to_resize = NULL, fileinfo = NULL, output = NULL,
   }
   
   # create tmp_dir if it does not already exist
-  output <- normalizePath(output)
+  output <- normalizePath(output, mustWork = FALSE)
   if (file.exists(output)) {
     cat("output folder exists")
   } else if (file.exists(output)) {
@@ -540,8 +538,8 @@ resize_photos <- function(to_resize = NULL, fileinfo = NULL, output = NULL,
             
             # crop out the bushnell stuff, which takes up
             # 100 pixels on the bottom 
-            if(is.na(to_resize$paths[id[subject]][[1]][photo, "file_paths"])) next
-            system(paste0(pwq(im), pwq(to_resize$paths[id[subject]][[1]][photo,"file_paths"]), im_call,
+            if(is.na(to_resize$paths[id[subject]][[1]][photo])) next
+            system(paste0(pwq(im), pwq(to_resize$paths[id[subject]][[1]][photo]), im_call,
                           pwq(paste0(output, "/", to_resize$names[id[subject],photo]), 
                               space = FALSE)))
           }
