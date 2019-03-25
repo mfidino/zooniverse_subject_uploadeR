@@ -3,7 +3,7 @@
 These scripts function as convenience wrappers for preparing images to be uploaded to a Zooniverse project via [panoptes-cli](https://github.com/zooniverse/panoptes-cli)
 
 ## Notes
-- This is written to work for PCs 
+- This is currently written to work for PCs 
 - This will work for multiple photos per triggering event (i.e., you set a camera trap to take multiple photos when an animal comes across it)
 - For multiple photos per triggering event pictures are grouped together if they occur within 5 seconds of each other. If no delay is set between possible triggering events there is the possibility that a large number of photos can be grouped together. When this occurs, they are split apart based off of how many photos per trigger should be expected, which the user supplies to the `max_groups` object when using `get_fileinfo()`.
 - For multiple photos per triggering event we assume that the name of the image contains information about which site it was taken. An
