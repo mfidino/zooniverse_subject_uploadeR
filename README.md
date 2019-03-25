@@ -61,7 +61,6 @@ upload_photos(output = "output/folder/location",
 
 ## Finding the apporopriate subject ID
 
-### Subject id
 Along the lefthand side of the Project Builder page click on the appropriate subject set (or create a new one) under the SUBJECT SETS section. The subject sets number will be in the header of the page that is loaded.
 
 ![Imgur](http://i.imgur.com/JRDVYTA.png)
