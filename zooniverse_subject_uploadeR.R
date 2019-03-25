@@ -64,15 +64,25 @@ if(length(folder_to_resize) == 0 |is.character(folder_to_resize)==FALSE ){
         run that portion of code in upload_photos_to_zooniverse.R")
 }
 
-##################
-# photo_regex
-##################
-photo_regex <- function(x){
-  to_return <- switch(tolower(x),
+
+###########################
+# get_fileinfo
+###########################
+
+
+get_fileinfo <- function(folder_to_upload = NULL,
+                         photo_file_type = NULL,
+                         search_subdirs = TRUE,
+                         max_group = NULL){
+  # check that the folder exists
+  if(!file.exists(folder_to_upload)){
+    stop(paste(folder_to_upload, "does not exist. Change input given to 'folder_to_upload'."))
+  }
+  photo_file_type <- switch(tolower(photo_file_type),
                       'jpg'  = ".JPG$|.jpeg$",
                       'jpeg' = ".JPG$|.jpeg$",
                       'png'  = ".PNG|.png")
-  if(is.null(to_return)){
+  if(is.null(photo_file_type)){
     err <- paste0('file_info$photo_file_type must take one of the following values:\n',
                   "\t- 'jpg'\n",
                   "\t- 'jpeg'\n",
@@ -81,8 +91,21 @@ photo_regex <- function(x){
                   "\t- 'PNG'")
     stop(err)
   }
-  return(to_return)
+  if(!is.logical(search_subdirs)){
+    stop("search_subdirs must be a logical statement (T/F or TRUE/FALSE).\nCurrent entry: ", search_subdirs)
+  }
+  if(!is.numeric(max_group)){
+    stop("max_group must be numeric.\n Current entry: ", max_group)
+  }
+  
+  return(list(folder_to_upload = folder_to_upload,
+              photo_file_type = photo_file_type,
+              max_group = max_group,
+              search_subdirs = search_subdirs))
+  
+  
 }
+
 
 ###########################
 # get_paths
@@ -106,7 +129,7 @@ get_paths <- function(file_info = NULL){
   }
   cat("Collecting file paths\n")
   file_paths <- unlist(list.files(path = file_info$folder_to_upload, 
-                                  pattern = photo_regex(file_info$photo_file_type), 
+                                  pattern = file_info$photo_file_type, 
                                   recursive = file_info$search_subdirs, 
                                   full.names = TRUE, 
                                   ignore.case = TRUE)) 
@@ -203,7 +226,7 @@ get_site_names <- function(file_paths = NULL, file_info = NULL){
   photo_names <- strsplit(file_paths, "/") %>% 
     sapply(FUN = function(x){x[length(x)]})
   
-  site_names <- gsub(photo_regex(file_info$photo_file_type), "", photo_names)
+  site_names <- gsub(file_info$photo_file_type, "", photo_names)
   
   # drop numerics if the trail like 'site_0001', 'site_0002'
   if(length(grep("_\\w+$", site_names)) > 0 ){
@@ -457,6 +480,7 @@ resize_photos <- function(to_resize = NULL, file_info = NULL, output = NULL,
   }
   
   # create tmp_dir if it does not already exist
+  output <- normalizePath(output)
   if (file.exists(output)) {
     cat("output folder exists")
   } else if (file.exists(output)) {
@@ -554,8 +578,9 @@ resize_photos <- function(to_resize = NULL, file_info = NULL, output = NULL,
       end <- end + 500
     }
   }
-  
-  
+# make it a bat file  
+# FOR %i IN (manifest_*) DO panoptes subject-set upload-subjects --allow-missing -m image/jpg 74127 %i
+
   
 
 
