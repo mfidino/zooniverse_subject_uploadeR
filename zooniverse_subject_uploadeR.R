@@ -114,7 +114,7 @@ get_fileinfo <- function(folder_to_upload = NULL,
 get_paths <- function(fileinfo = NULL){
   if(!is.list(fileinfo) | 
      any(!names(fileinfo) %in% c('folder_to_upload', 'photo_file_type', 'search_subdirs', 'max_group'))){
-    err <- paste0('Use get_fileinfo() to construct fileinfo.\n\n',
+    err <- paste0('Use get_fileinfo() to construct fileinfo argument.\n\n',
                   'EXAMPLE:\n\n',
                   "my_fileinfo <- get_fileinfo(folder_to_upload = 'file/path/to/photos/here',\n",
                   "                     photo_file_type = 'jpg',\n",
@@ -123,7 +123,7 @@ get_paths <- function(fileinfo = NULL){
     stop(err)
   }
   if(!fileinfo$photo_file_type %in% c(".JPG$|.jpeg$", ".PNG|.png")){
-    stop("fileinfo$photo_file_type incorrect. Use get_fileinfo() to make fileinfo object." )
+    stop("fileinfo$photo_file_type incorrect. Use get_fileinfo() to make fileinfo argument." )
   }
   file_paths <- unlist(list.files(path = fileinfo$folder_to_upload, 
                                   pattern = fileinfo$photo_file_type, 
@@ -175,10 +175,10 @@ if(class(human_images) == "data.frame"){
 }
 
 #################################
-# get_site_names
+# get_sitenames
 #################################
 
-get_site_names <- function(file_paths = NULL, fileinfo = NULL){
+get_sitenames <- function(file_paths = NULL, fileinfo = NULL){
   # check file_paths
   if(is.null(file_paths)){
     stop("please supply file_paths to this function.")
@@ -204,12 +204,7 @@ get_site_names <- function(file_paths = NULL, fileinfo = NULL){
   }
   if(!is.list(fileinfo) | 
      any(!names(fileinfo) %in% c('folder_to_upload', 'photo_file_type', 'search_subdirs', 'max_group'))){
-    err <- paste0('the structure of fileinfo is incorrect.',
-                  '\n\nfileinfo must be a list object that contains the following named elements:\n\n',
-                  '\t- folder_to_upload: the file path to the photos to be uploaded\n',
-                  '\t- photo_file_type:  regex for the file type of the images (jpg or png)\n',
-                  '\t- search_subdirs:   TRUE / FALSE on whether to recursively search folder_to_upload\n',
-                  '\t- max_group: the max number of photos to group if they are within 5 seconds of one another\n\n',
+    err <- paste0('Use get_fileinfo() to construct fileinfo argument.\n\n',
                   'EXAMPLE:\n\n',
                   "my_fileinfo <- get_fileinfo(folder_to_upload = 'file/path/to/photos/here',\n",
                   "                     photo_file_type = 'jpg',\n",
@@ -259,10 +254,10 @@ get_datetime <- function(file_paths = NULL, site_names = NULL){
                   'file_paths can easily be generated with get_paths().\n\n',
                   'EXAMPLE:\n\n',
                   '# create fileinfo\n',
-                  "my_fileinfo <- list(folder_to_upload = 'file/path/to/photos/here',\n",
-                  "                     photo_file_type = 'jpg',\n",
-                  "                     search_subdirs = TRUE\n",
-                  "                     max_group = 1)\n\n",
+                  "my_fileinfo <- get_fileinfo(folder_to_upload = 'file/path/to/photos/here',\n",
+                  "                            photo_file_type = 'jpg',\n",
+                  "                            search_subdirs = TRUE\n",
+                  "                            max_group = 1)\n\n",
                   '# collect file paths\n',
                   'my_files <- get_paths(my_fileinfo)\n\n',
                   '# collect site names\n',
@@ -321,17 +316,12 @@ n_batch <- length(date_time_psx)
 bundle_photos <- function(date_time = NULL, fileinfo = NULL){
   if(!is.list(fileinfo) | 
      any(!names(fileinfo) %in% c('folder_to_upload', 'photo_file_type', 'search_subdirs', 'max_group'))){
-    err <- paste0('the structure of fileinfo is incorrect.',
-                  '\n\nfileinfo must be a list object that contains the following named elements:\n\n',
-                  '\t- folder_to_upload: the file path to the photos to be uploaded\n',
-                  '\t- photo_file_type:  the file type of the images (jpg or png)\n',
-                  '\t- search_subdirs:   TRUE / FALSE on whether to recursively search folder_to_upload\n',
-                  '\t- max_group: the max number of photos to group if they are within 5 seconds of one another\n\n',
+    err <- paste0('Use get_fileinfo() to construct fileinfo argument.\n\n',
                   'EXAMPLE:\n\n',
-                  "my_fileinfo <- list(folder_to_upload = 'file/path/to/photos/here',\n",
+                  "my_fileinfo <- get_fileinfo(folder_to_upload = 'file/path/to/photos/here',\n",
                   "                     photo_file_type = 'jpg',\n",
-                  "                     search_subdirs = TRUE,\n",
-                  "                     max_group = 1)")
+                  "                     max_group = 1,\n",
+                  "                     search_subdirs = TRUE)")
     stop(err)
   }
   # where does the first photo start
@@ -476,7 +466,7 @@ resize_photos <- function(to_resize = NULL, fileinfo = NULL, output = NULL,
   }
   
   # create tmp_dir if it does not already exist
-  output <- normalizePath(output)
+  output <- normalizePath(output, winslash = "/")
   if (file.exists(output)) {
     cat("output folder exists")
   } else if (file.exists(output)) {
@@ -577,6 +567,22 @@ resize_photos <- function(to_resize = NULL, fileinfo = NULL, output = NULL,
 # make it a bat file  
 # FOR %i IN (manifest_*) DO panoptes subject-set upload-subjects --allow-missing -m image/jpg 74127 %i
 
+upload_photos <- function(output = NULL, subject_set = NULL){
+  output <- normalizePath(output, winslash = "/")
+  sink('panoptes_windows.bat')
+  cat(
+  paste0("@ECHO OFF\n",
+         "cd %1\n",
+         "ECHO This is a batch script to use panoptes cli.\n",
+         "FOR %%i IN (%1/manifest_*) DO panoptes subject-set upload-subjects --allow-missing -m image/jpg %2 %%i" ),
+  fill = TRUE, sep = ""
+  )
+  sink()
+  shell(paste('start cmd.exe @cmd /k panoptes_windows.bat', output, subject_set))
+  if(file.exists('panoptes_windows.bat')){
+    file.remove('panoptes_windows.bat')
+  }
+}
   
 
 

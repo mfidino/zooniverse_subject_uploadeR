@@ -3,13 +3,13 @@
 # Objects to change to run upload_photos_to_zooniverse.R
 #
 
-my_file_info <- list(folder_to_upload = "Z:/TransectTrailCamPics/SP17/DPT/D09-VTC1",
-                     photo_file_type = 'JPG',
-                     search_subdirs = TRUE,
-                     max_group = 1)
+my_file_info <- get_fileinfo(folder_to_upload = "C:/Users/mfidino/Desktop/cww_test",
+                             photo_file_type = 'JPG',
+                             max_group = 1,
+                             search_subdirs = TRUE)
 
 file_paths <- get_paths(my_file_info)
-site_names <- get_site_names(file_paths, my_file_info)
+site_names <- get_sitenames(file_paths, my_file_info)
 my_dates <- get_datetime(file_paths, site_names)
 
 to_resize<- bundle_photos(my_dates, my_file_info)
