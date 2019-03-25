@@ -58,12 +58,6 @@ packages_required <- c("dplyr", "magrittr", "exifr", "getPass")
 
 package_load(packages_required)
 
-# get file paths
-if(length(folder_to_resize) == 0 |is.character(folder_to_resize)==FALSE ){
-  stop("This script requires 'folder_to_resize' as a character string,
-        run that portion of code in upload_photos_to_zooniverse.R")
-}
-
 
 ###########################
 # get_fileinfo
@@ -153,26 +147,26 @@ get_paths <- function(fileinfo = NULL){
 
 
 
-if(.username == "mason_uwi"){
-if(class(human_images) == "data.frame"){
-  
-  human <- human_images[human_images$has_human == TRUE,]
-  
-  # get just the photo_name
-  p_name_human <- strsplit(human$human_photos, "/") %>% 
-    sapply(., function(x) x[length(x)]) %>% tolower
-  
-  p_name_images <- strsplit(file_paths , "/") %>% 
-    sapply(., function(x) x[length(x)]) %>% tolower
-  
-  human_to_go <- which(p_name_images %in% p_name_human)
-  if(length(human_to_go)> 0){
-    file_paths <- file_paths[-human_to_go]
-  }
-  
-  
-}
-}
+#if(.username == "mason_uwi"){
+#if(class(human_images) == "data.frame"){
+#  
+#  human <- human_images[human_images$has_human == TRUE,]
+#  
+#  # get just the photo_name
+#  p_name_human <- strsplit(human$human_photos, "/") %>% 
+#    sapply(., function(x) x[length(x)]) %>% tolower
+#  
+#  p_name_images <- strsplit(file_paths , "/") %>% 
+#    sapply(., function(x) x[length(x)]) %>% tolower
+#  
+#  human_to_go <- which(p_name_images %in% p_name_human)
+#  if(length(human_to_go)> 0){
+#    file_paths <- file_paths[-human_to_go]
+#  }
+#  
+#  
+#}
+#}
 
 #################################
 # get_sitenames
@@ -307,7 +301,7 @@ get_datetime <- function(file_paths = NULL, site_names = NULL){
 }
 
 # number of photos in upload
-n_batch <- length(date_time_psx)
+#n_batch <- length(date_time_psx)
 
 ##########################
 # bundle photos
@@ -466,7 +460,7 @@ resize_photos <- function(to_resize = NULL, fileinfo = NULL, output = NULL,
   }
   
   # create tmp_dir if it does not already exist
-  output <- normalizePath(output, winslash = "/")
+  output <- normalizePath(output)
   if (file.exists(output)) {
     cat("output folder exists")
   } else if (file.exists(output)) {
@@ -574,14 +568,12 @@ upload_photos <- function(output = NULL, subject_set = NULL){
   paste0("@ECHO OFF\n",
          "cd %1\n",
          "ECHO This is a batch script to use panoptes cli.\n",
+         "panoptes configure\n",
          "FOR %%i IN (%1/manifest_*) DO panoptes subject-set upload-subjects --allow-missing -m image/jpg %2 %%i" ),
   fill = TRUE, sep = ""
   )
   sink()
   shell(paste('start cmd.exe @cmd /k panoptes_windows.bat', output, subject_set))
-  if(file.exists('panoptes_windows.bat')){
-    file.remove('panoptes_windows.bat')
-  }
 }
   
 

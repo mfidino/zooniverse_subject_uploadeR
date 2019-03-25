@@ -15,8 +15,10 @@ my_dates <- get_datetime(file_paths, site_names)
 to_resize<- bundle_photos(my_dates, my_file_info)
 
 resize_photos(to_resize, my_file_info, 
-              output = "C:/users/mfidino/folder_test", crop_drop = TRUE, border = FALSE)
+              output = "output/folder/location", crop_drop = TRUE, border = FALSE)
 
+upload_photos(output = "output/folder/location",
+              subject_set = 74127)
 
 
 # run zooniverse_subject_uploaderR.R
