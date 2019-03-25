@@ -1,11 +1,11 @@
 # zooniverse_subject_uploadeR
 
-An R script that resizes camera trap photos via ImageMagick and uploads them as subjects for projects built on zooniverse.org (Panoptes) via [panoptes-cli](https://github.com/zooniverse/panoptes-cli).  
+These scripts function as convenience wrappers for preparing images to be uploaded to a Zooniverse project via [panoptes-cli](https://github.com/zooniverse/panoptes-cli)
 
 ## Notes
 - This is written to work for PCs 
-- This will now work for multiple photos per triggering event (i.e., you set a camera trap to take multiple photos when an animal comes across it)
-- For multiple photos per triggering event pictures are grouped together if they occur within 5 seconds of each other. If no delay is set between possible triggering events there is the possibility that a large number of photos can be grouped together. When this occurs, they are split apart based off of how many photos per trigger should be expected, which the user supplies to the `n_photos_when_triggered` object in `upload_photos_to_zooniverse.R`.
+- This will work for multiple photos per triggering event (i.e., you set a camera trap to take multiple photos when an animal comes across it)
+- For multiple photos per triggering event pictures are grouped together if they occur within 5 seconds of each other. If no delay is set between possible triggering events there is the possibility that a large number of photos can be grouped together. When this occurs, they are split apart based off of how many photos per trigger should be expected, which the user supplies to the `max_groups` object when using `get_fileinfo()`.
 - For multiple photos per triggering event we assume that the name of the image contains information about which site it was taken. An
 example of this would be the photo name `"CHIL - HUP1 - FA17_00001.JPG"`. The program will iterate through all the photo names to find
  the longest matching string in photos names that do not end with numeric information. In the above example that would be `"CHIL - HUP1 - FA17"`. The trailing numbers will be removed if they end with `"_NUMBERS"` or `"(NUMBERS)"`.
@@ -18,31 +18,48 @@ You will also need to download [ImageMagick](http://www.imagemagick.org/script/i
 
 zooniverse_subject_uploadeR uses [Exiftool](https://sno.phy.queensu.ca/~phil/exiftool/) via the [exifr](https://github.com/paleolimbot/exifr) R package. As [Exiftool](https://sno.phy.queensu.ca/~phil/exiftool/) is written in Perl, you will need to download it if you have not. This can be done from [Strawberry Perl](http://strawberryperl.com/):[64-bit](http://strawberryperl.com/download/5.26.0.1/strawberry-perl-5.26.0.1-64bit.msi) (most users) or [32-bit](http://strawberryperl.com/download/5.26.0.1/strawberry-perl-5.26.0.1-32bit.msi) (advanced users).
 
-Aside from [exifr](https://github.com/paleolimbot/exifr), this software also uses the [dplyr](https://github.com/tidyverse/dplyr) and [magrittr](https://github.com/tidyverse/magrittr) packages. If you do not have these R packages downloaded zooniverse_subject_uploadeR will do it for you.
-
 ## Use
 
-The main script that will be changed in order to upload photos is `upload_photos_to_zooniverse.R`. There are a number of objects in there that you will have to alter for your project that are then plugged into the `zooniverse_subject_uploadeR.R` script.  The purpose of each of the objects in `upload_photos_to_zooniverse.R` are commented out so you can determine what they do. Do not change the object names or `zooniverse_subject_uploadeR.R` will not work (just change the objects values).
+The general flow of using the functions in `zooniverse_subject_uploadeR` follows as such:
+```
+# load functions from zooniverse_subject_uploaderR.R
+source("zooniverse_subject_uploader.R")
 
-After reassinging the objects in `upload_photos_to_zooniverse.R` you can source `zooniverse_subject_uploadeR.R` (the last line of code in `upload_photos_to_zooniverse.R`). Assuming that both scripts are in your current working directory R will commence the image resizing and upload process. If there are any missing objects that are needed for uploading it should spit back a relevant error.
+# Get the file information you want to upload to zooniverse
+my_file_info <- get_fileinfo(folder_to_upload = "path/to/your/photos/folder",
+                             photo_file_type = 'JPG',
+                             max_group = 1,
+                             search_subdirs = TRUE)
 
-The first progress bar you see in the `R` console is the progress made on resizing a batch of photos. The additional data printed in the `R` console following this is from the upload process via `panoptes-cli`. This script will batch process any number of photos, but does it in multiples of 1000 (the last batch is whatever is leftover).
+# collect the file paths of images within my_file_info$folder_to_upload
+file_paths <- get_paths(my_file_info)
 
-Before uploading photos you may want to resize a test batch to make sure that the size of photos is < 600 kb. The current ImageMagick call does a sufficient job for camera trap images collected with Bushnells. 
+# If you have multiple triggers for capture event on a camera, you need
+#  to collect the site names from the image.
+site_names <- get_sitenames(file_paths, my_file_info)
 
-## Finding the apporopriate subject id's, workflows, etc.
+# Collect the date / time information from photo exif data
+my_dates <- get_datetime(file_paths, site_names)
 
-These numbers need to be added to `upload_photos_to_zooniverse.R` as a numeric object. (e.g. `workflow <- 1234`).  You can find the appropriate numbers on that particular projects Project Builder homepage.
+# Bundle photos together for resizing
+to_resize<- bundle_photos(my_dates, my_file_info)
 
-### Project number
-On your Project Builder homepage for a particular project. The project number is in the top left corner (e.g. Chicago Wildlife Watch is project 2990).
+# resize the photos
+resize_photos(to_resize, my_file_info, 
+              output = "output/folder/location", 
+              crop_drop = FALSE, border = FALSE)
 
-![Imgur](http://i.imgur.com/1ofQgDu.png)
+# upload the photos, this will open up a command prompt and execute
+#  a batch file to upload each manifest file in your output folder.
+#  You need to collect the subject_set id from your zooniverse
+#  project builder page. This batch script will also require you to enter
+#  your zooniverse username and password.
+upload_photos(output = "output/folder/location",
+              subject_set = PUT_SUBJECT_SET_NUMBER_HERE)
+```
 
-### Workflow number
-Along the lefthand side of the Project Builder page click on the appropriate workflow under the WORKFLOWS section that you want to upload subjects to. The workflow number will be in the header of the page that is loaded.
 
-![Imgur](http://i.imgur.com/HpFCu1h.png)
+## Finding the apporopriate subject ID
 
 ### Subject id
 Along the lefthand side of the Project Builder page click on the appropriate subject set (or create a new one) under the SUBJECT SETS section. The subject sets number will be in the header of the page that is loaded.
