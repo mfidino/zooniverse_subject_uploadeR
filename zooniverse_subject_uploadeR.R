@@ -214,8 +214,9 @@ get_sitenames <- function(file_paths = NULL, fileinfo = NULL){
   site_names <- gsub(fileinfo$photo_file_type, "", photo_names)
   
   # drop numerics if the trail like 'site_0001', 'site_0002'
+
   if(length(grep("_\\w+$", site_names)) > 0 ){
-    site_names <- gsub("_\\w+$","",site_names)
+    site_names <- gsub("_(?!.*_)\\w+$","",site_names, perl = TRUE)
   }
   
   # drop () if they are named that way
