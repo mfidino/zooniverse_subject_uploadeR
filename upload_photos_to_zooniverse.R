@@ -9,7 +9,8 @@ source("zooniverse_subject_uploader.R")
 my_file_info <- get_fileinfo(folder_to_upload = "path/to/your/photos/folder",
                              photo_file_type = 'JPG',
                              max_group = 1,
-                             search_subdirs = TRUE)
+                             search_subdirs = TRUE,
+                             seconds_between_triggers = NULL)
 
 # collect the file paths of images within my_file_info$folder_to_upload
 file_paths <- get_paths(my_file_info)
@@ -25,8 +26,8 @@ my_dates <- get_datetime(file_paths, site_names)
 to_resize<- bundle_photos(my_dates, my_file_info)
 
 # resize the photos
-resize_photos(to_resize, my_file_info, 
-              output = "output/folder/location", 
+resize_photos(to_resize, my_file_info,
+              output = "output/folder/location",
               crop_drop = TRUE, border = FALSE)
 
 # upload the photos, this will open up a command prompt and execute
