@@ -92,6 +92,9 @@ get_fileinfo <- function(folder_to_upload = NULL,
   if(!is.numeric(max_group)){
     stop("max_group must be numeric.\n Current entry: ", max_group)
   }
+  if(max_group > 8){
+    stop("max_group cannot be greater than 8.")
+  }
 
   return(list(folder_to_upload = folder_to_upload,
               photo_file_type = photo_file_type,
