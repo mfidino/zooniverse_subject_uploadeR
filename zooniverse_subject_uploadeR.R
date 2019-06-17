@@ -20,13 +20,13 @@
 # it downloads these packages.
 
 package_load<-function(packages = NULL, quiet=TRUE, verbose=FALSE, warn.conflicts=FALSE){
-  
+
   # download required packages if they're not already
-  
+
   pkgsToDownload<- packages[!(packages  %in% installed.packages()[,"Package"])]
   if(length(pkgsToDownload)>0)
     install.packages(pkgsToDownload, repos="http://cran.us.r-project.org", quiet=quiet, verbose=verbose)
-  
+
   # then load them
   for(i in 1:length(packages))
     require(packages[i], character.only=T, quietly=quiet, warn.conflicts=warn.conflicts)
@@ -67,7 +67,8 @@ package_load(packages_required)
 get_fileinfo <- function(folder_to_upload = NULL,
                          photo_file_type = NULL,
                          search_subdirs = TRUE,
-                         max_group = NULL){
+                         max_group = NULL,
+                         seconds_between_triggers = 5){
   # check that the folder exists
   if(!file.exists(folder_to_upload)){
     stop(paste(folder_to_upload, "does not exist. Change input given to 'folder_to_upload'."))
@@ -91,13 +92,17 @@ get_fileinfo <- function(folder_to_upload = NULL,
   if(!is.numeric(max_group)){
     stop("max_group must be numeric.\n Current entry: ", max_group)
   }
-  
+  if(max_group > 8){
+    stop("max_group cannot be greater than 8.")
+  }
+
   return(list(folder_to_upload = folder_to_upload,
               photo_file_type = photo_file_type,
               max_group = max_group,
-              search_subdirs = search_subdirs))
-  
-  
+              search_subdirs = search_subdirs,
+              seconds_between_triggers = seconds_between_triggers))
+
+
 }
 
 
@@ -106,7 +111,7 @@ get_fileinfo <- function(folder_to_upload = NULL,
 ###########################
 
 get_paths <- function(fileinfo = NULL){
-  if(!is.list(fileinfo) | 
+  if(!is.list(fileinfo) |
      any(!names(fileinfo) %in% c('folder_to_upload', 'photo_file_type', 'search_subdirs', 'max_group'))){
     err <- paste0('Use get_fileinfo() to construct fileinfo argument.\n\n',
                   'EXAMPLE:\n\n',
@@ -119,21 +124,21 @@ get_paths <- function(fileinfo = NULL){
   if(!fileinfo$photo_file_type %in% c(".JPG$|.jpeg$", ".PNG|.png")){
     stop("fileinfo$photo_file_type incorrect. Use get_fileinfo() to make fileinfo argument." )
   }
-  file_paths <- unlist(list.files(path = fileinfo$folder_to_upload, 
-                                  pattern = fileinfo$photo_file_type, 
-                                  recursive = fileinfo$search_subdirs, 
-                                  full.names = TRUE, 
-                                  ignore.case = TRUE)) 
-  
-  # drop corrupted files that are 0 kb 
+  file_paths <- unlist(list.files(path = fileinfo$folder_to_upload,
+                                  pattern = fileinfo$photo_file_type,
+                                  recursive = fileinfo$search_subdirs,
+                                  full.names = TRUE,
+                                  ignore.case = TRUE))
+
+  # drop corrupted files that are 0 kb
   file_sizes <- file.size(file_paths)
   if(any(file_sizes == 0)){
     file_paths <- file_paths[-which(file_sizes == 0)]
   }
-  
+
   # convert double slash to single if present
   file_paths <-gsub("//", "/", file_paths)
-  
+
   return(file_paths)
 }
 
@@ -149,22 +154,22 @@ get_paths <- function(fileinfo = NULL){
 
 #if(.username == "mason_uwi"){
 #if(class(human_images) == "data.frame"){
-#  
+#
 #  human <- human_images[human_images$has_human == TRUE,]
-#  
+#
 #  # get just the photo_name
-#  p_name_human <- strsplit(human$human_photos, "/") %>% 
+#  p_name_human <- strsplit(human$human_photos, "/") %>%
 #    sapply(., function(x) x[length(x)]) %>% tolower
-#  
-#  p_name_images <- strsplit(file_paths , "/") %>% 
+#
+#  p_name_images <- strsplit(file_paths , "/") %>%
 #    sapply(., function(x) x[length(x)]) %>% tolower
-#  
+#
 #  human_to_go <- which(p_name_images %in% p_name_human)
 #  if(length(human_to_go)> 0){
 #    file_paths <- file_paths[-human_to_go]
 #  }
-#  
-#  
+#
+#
 #}
 #}
 
@@ -196,7 +201,7 @@ get_sitenames <- function(file_paths = NULL, fileinfo = NULL){
   if(is.null(fileinfo)){
     stop("please supply fileinfo to this function.")
   }
-  if(!is.list(fileinfo) | 
+  if(!is.list(fileinfo) |
      any(!names(fileinfo) %in% c('folder_to_upload', 'photo_file_type', 'search_subdirs', 'max_group'))){
     err <- paste0('Use get_fileinfo() to construct fileinfo argument.\n\n',
                   'EXAMPLE:\n\n',
@@ -208,30 +213,30 @@ get_sitenames <- function(file_paths = NULL, fileinfo = NULL){
   }
 
   # get just the file names
-  photo_names <- strsplit(file_paths, "/") %>% 
+  photo_names <- strsplit(file_paths, "/") %>%
     sapply(FUN = function(x){x[length(x)]})
-  
+
   site_names <- gsub(fileinfo$photo_file_type, "", photo_names)
-  
+
   # drop numerics if the trail like 'site_0001', 'site_0002'
 
   if(length(grep("_\\w+$", site_names)) > 0 ){
     site_names <- gsub("_(?!.*_)\\w+$","",site_names, perl = TRUE)
   }
-  
+
   # drop () if they are named that way
   if(length(grep("\\s\\(\\w+\\)?$", site_names)) > 0) {
     site_names <- gsub("\\s\\(\\w+\\)?$","",site_names)
   }
-  
+
   # create a summary of the sites
   site_summary <- t(t(sort(table(site_names), decreasing = TRUE)))
   site_summary <- tibble::tibble(site_names = row.names(site_summary),
                              count = site_summary[,1])
-  
+
   print(site_summary)
-  
-  return(list(names = site_names, 
+
+  return(list(names = site_names,
               summary = site_summary))
 }
 
@@ -261,20 +266,20 @@ get_datetime <- function(file_paths = NULL, site_names = NULL){
   }
   cat('Collecting date time information from photos\n')
   date_time <- read_exif(file_paths, tags = "DateTimeOriginal")
-  
+
   # determine what splits the date time stuff
   num_split <- gsub('[[:digit:]]+', '', date_time$DateTimeOriginal[1])
   # how formatted
   hf<- unlist(strsplit(num_split, ""))
-  
+
   # make character object that describes how
   # the date / time is encoded on a camera trap
   pic_format <-paste0("%Y",hf[1],"%m",hf[2],"%d",hf[3],"%H",hf[4],"%M",hf[5],"%S")
-  
+
   # convert to posix
-  date_time_psx <- as.POSIXct(date_time$DateTimeOriginal, 
+  date_time_psx <- as.POSIXct(date_time$DateTimeOriginal,
                               format = pic_format)
-  
+
   # sort the photos by time instead of by file name
   #  if site_names is available sort by site first
   if(is.null(site_names)){
@@ -282,13 +287,13 @@ get_datetime <- function(file_paths = NULL, site_names = NULL){
   } else {
     time_order <- order(site_names$names, date_time_psx)
   }
-  
+
     date_time_psx <- as.character(date_time_psx[time_order])
     file_paths <- file_paths[time_order]
     if(!is.null(site_names)){
       site_names_vec <- site_names$names[time_order]
     }
-  
+
   # bundle everything together
   if(is.null(site_names)){
     date_time <- tibble::tibble(file_paths = file_paths,
@@ -309,7 +314,7 @@ get_datetime <- function(file_paths = NULL, site_names = NULL){
 ##########################
 
 bundle_photos <- function(date_time = NULL, fileinfo = NULL){
-  if(!is.list(fileinfo) | 
+  if(!is.list(fileinfo) |
      any(!names(fileinfo) %in% c('folder_to_upload', 'photo_file_type', 'search_subdirs', 'max_group'))){
     err <- paste0('Use get_fileinfo() to construct fileinfo argument.\n\n',
                   'EXAMPLE:\n\n',
@@ -323,11 +328,11 @@ bundle_photos <- function(date_time = NULL, fileinfo = NULL){
   date_time_psx <- diff(as.POSIXct(date_time$DateTimeOriginal))
   units(date_time_psx) <-  'secs'
   date_time_psx <- as.numeric(date_time_psx)
-  
+
   # all photos not within 5 seconds of one another are
   #  grouped together
-  unq_batch <- c(0,which(date_time_psx>5 | date_time_psx <0)) + 1
-  
+  unq_batch <- c(0,which(date_time_psx>file_info$seconds_between_images | date_time_psx <0)) + 1
+
   new_paths <- vector("list", length(unq_batch))
   for(i in 1:length(unq_batch)){
     if(i == length(unq_batch)){
@@ -356,19 +361,19 @@ bundle_photos <- function(date_time = NULL, fileinfo = NULL){
     }
     new_paths <- lapply(new_paths, .add_blank)
   }
-  
+
   # splits by the forward slash
   # used for image names on zooniverse
-  new_photo_names <- lapply(new_paths, function(x)strsplit(x$file_paths, "/") ) 
+  new_photo_names <- lapply(new_paths, function(x)strsplit(x$file_paths, "/") )
   # we need the last element from a list in a list
   # this keeps it in the same structure as new_paths
-  new_photo_names <- sapply(new_photo_names, function(x) sapply(x, function(y){y[length(y)]})) %>% 
+  new_photo_names <- sapply(new_photo_names, function(x) sapply(x, function(y){y[length(y)]})) %>%
     matrix(., ncol = fileinfo$max_group, nrow = length(new_paths), byrow = TRUE)
-  
+
   # we need to collect the date time stuff in the same format
-  new_photo_dates <- sapply(new_paths, function(x) as.character(x$DateTimeOriginal)) %>% 
+  new_photo_dates <- sapply(new_paths, function(x) as.character(x$DateTimeOriginal)) %>%
     matrix(., ncol = fileinfo$max_group, nrow = length(new_paths), byrow = TRUE)
-  
+
   to_return <- list(paths = lapply(new_paths, function(x)x$file_paths),
                     names = new_photo_names,
                     times = new_photo_dates)
@@ -381,7 +386,7 @@ bundle_photos <- function(date_time = NULL, fileinfo = NULL){
 ##################################
 
 split_bundles <- function(new_paths = NULL, fileinfo = NULL){
-  
+
   # it is imperative we do this backwards via rev so that our
   #  placement of these new bundles can be correctly indexed.
   extra_trig <- rev(which(sapply(new_paths, nrow)> fileinfo$max_group))
@@ -394,7 +399,7 @@ split_bundles <- function(new_paths = NULL, fileinfo = NULL){
       # then the last trigger is assumed to be the issue. This will likely
       # be the case (considering the camera would have to finish it's
       # first triggering event before a second one started)
-      trigger_batches <- split(seq(1, fileinfo$max_group * n_triggers), 
+      trigger_batches <- split(seq(1, fileinfo$max_group * n_triggers),
                                ceiling(seq(1, fileinfo$max_group * n_triggers)/
                                          fileinfo$max_group))
       # temporary list to hold the file paths
@@ -405,37 +410,37 @@ split_bundles <- function(new_paths = NULL, fileinfo = NULL){
       # sneak temp into the correct location in new_paths
       # if it's the last record put it in the end
       if(extra_trig[extra] == length(new_paths)){
-        new_paths <- c(new_paths[1:c(extra_trig[extra]-1)], 
+        new_paths <- c(new_paths[1:c(extra_trig[extra]-1)],
                        temp)
       } else if(extra_trig[extra] == 1){
         # if it is the first record put it at the start
         new_paths <- c(temp, new_paths[2:length(new_paths)])
       } else{
         # otherwise, sneak it in
-        new_paths <- c(new_paths[1:c(extra_trig[extra]-1)], 
+        new_paths <- c(new_paths[1:c(extra_trig[extra]-1)],
                        temp, new_paths[c(extra_trig[extra]+1):length(new_paths)])
       }
     }
-  
-  
+
+
   if(any(sapply(new_paths, is.null))){
     new_paths <- new_paths[!sapply(new_paths, is.null)]
   }
-  
+
   # add blank rows if needed
-  
+
   return(new_paths)
 }
-  
 
 
 
-# now, we want to copy the files over ~ 1000 files over to 
+
+# now, we want to copy the files over ~ 1000 files over to
 # a temporary directory. First we determine how many
 # iterations of 1k photos we need to take through
 # photo_names
 
-  # integer division 
+  # integer division
 
 
 resize_photos <- function(to_resize = NULL, fileinfo = NULL, output = NULL,
@@ -457,7 +462,7 @@ resize_photos <- function(to_resize = NULL, fileinfo = NULL, output = NULL,
       "Specify file path for resized photos and manifests.")
     stop(err)
   }
-  
+
   # create tmp_dir if it does not already exist
   output <- normalizePath(output, mustWork = FALSE)
   if (file.exists(output)) {
@@ -469,7 +474,7 @@ resize_photos <- function(to_resize = NULL, fileinfo = NULL, output = NULL,
     cat("output folder does not exist - creating")
     dir.create(file.path(output))
   }
-  
+
 
   # figure out which image magick call to make.
   if(crop_drop & !border){
@@ -484,22 +489,22 @@ resize_photos <- function(to_resize = NULL, fileinfo = NULL, output = NULL,
   } else if(crop_drop & border){
     im_call <- " -background #808080   -crop 0x0+0-100 -resize 900x600! -quality 96 -interlace Plane -sampling-factor 4:2:0 -define jpeg:dct-method-float -splice 35x35 -font arial -pointsize 30 -fill black -annotate +185+30 1 -annotate +485+30 2 -annotate +785+30 3 -fill #cccccc -annotate +335+25 | -annotate +635+25 | -fill black -annotate +8+135 A -annotate +8+335 B -annotate +8+535 C -fill #cccccc -annotate 90x90+10+235 | -annotate 90x90+10+435 | "
   }
-  
+
   # resizing images
-  
+
   # figure out how many batches to do
-  
+
   if(length(to_resize$paths)>= 500){
     n_iters <- ceiling(length(to_resize$paths) / 500)
   }else{
     n_iters <- 1
   }
-  
+
   # set up to grab the first 500 photos, these
   # objects get updated throughout the for loop below.
   start <- 1
   end <- 500
-  
+
   for(i in 1:n_iters){
     cat(paste("\nPreparing manifest", i, "of", n_iters, "\n"))
     # make 1000 unique ids for all i less than n_iters
@@ -511,24 +516,24 @@ resize_photos <- function(to_resize = NULL, fileinfo = NULL, output = NULL,
       end <- length(to_resize$paths)
     } # close ifelse statement
     # make the manifest
-    # we need a number of columns equal to 1 + n_photos_when_triggers + 
+    # we need a number of columns equal to 1 + n_photos_when_triggers +
     #  length of the datetime_columns object
     datetime_columns <- paste("#datetime", 1:fileinfo$max_group, sep = "_")
-    manifest <- data.frame(matrix(id, nrow = length(id), 
+    manifest <- data.frame(matrix(id, nrow = length(id),
                                   ncol = 1 + fileinfo$max_group + length(datetime_columns)))
     # id and then the file names
-    
-    colnames(manifest) <- c("id", 
-                            paste0(rep("image_", fileinfo$max_group), 
+
+    colnames(manifest) <- c("id",
+                            paste0(rep("image_", fileinfo$max_group),
                                    1:fileinfo$max_group), datetime_columns)
     # put the new_photo_names in the manifest
     manifest[,grep("^image_\\w+$", colnames(manifest))] <- to_resize$names[id,]
     # put the date-time in the manifest
     manifest[,grep("^#datetime_\\w+$", colnames(manifest))] <- to_resize$times[id,]
-    
+
     # name of manifest file
     manifest_file_path <- paste0(output,"/manifest_",i,".csv")
-    
+
     # write the manifest to the tmp_dir
     write.csv(manifest, manifest_file_path , row.names = FALSE)
       # go through and resize each photo and subject
@@ -536,19 +541,19 @@ resize_photos <- function(to_resize = NULL, fileinfo = NULL, output = NULL,
       if(fileinfo$max_group>1){
         for(subject in 1:length(id)){
           for(photo in 1:fileinfo$max_group){
-            
+
             # crop out the bushnell stuff, which takes up
-            # 100 pixels on the bottom 
+            # 100 pixels on the bottom
             if(is.na(to_resize$paths[id[subject]][[1]][photo])) next
             system(paste0(pwq(im), pwq(to_resize$paths[id[subject]][[1]][photo]), im_call,
-                          pwq(paste0(output, "/", to_resize$names[id[subject],photo]), 
+                          pwq(paste0(output, "/", to_resize$names[id[subject],photo]),
                               space = FALSE)))
           }
         }
       } else { # if only one photo per trigger
         for(subject in 1:length(id)){
           system(paste0(pwq(im), pwq(to_resize$paths[id[subject]]), im_call,
-                        pwq(paste0(output, "/", to_resize$names[id[subject],]), 
+                        pwq(paste0(output, "/", to_resize$names[id[subject],]),
                             space = FALSE)))
         }
       }
@@ -557,7 +562,7 @@ resize_photos <- function(to_resize = NULL, fileinfo = NULL, output = NULL,
       end <- end + 500
     }
   }
-# make it a bat file  
+# make it a bat file
 # FOR %i IN (manifest_*) DO panoptes subject-set upload-subjects --allow-missing -m image/jpg 74127 %i
 
 upload_photos <- function(output = NULL, subject_set = NULL){
@@ -574,7 +579,7 @@ upload_photos <- function(output = NULL, subject_set = NULL){
   sink()
   shell(paste('start cmd.exe @cmd /k panoptes_windows.bat', output, subject_set))
 }
-  
+
 
 
 

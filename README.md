@@ -9,7 +9,7 @@ These scripts function as convenience wrappers for preparing images to be upload
 - For multiple photos per triggering event we assume that the name of the image contains information about which site it was taken. An
 example of this would be the photo name `"CHIL - HUP1 - FA17_00001.JPG"`. The program will iterate through all the photo names to find
  the longest matching string in photos names that do not end with numeric information. In the above example that would be `"CHIL - HUP1 - FA17"`. The trailing numbers will be removed if they end with `"_NUMBERS"` or `"(NUMBERS)"`.
-- This will accomodate instances when there is variation in the number of photos per triggering event (e.g., 2 photos per trigger can be uploaded alongside 3 photos per trigger). Set `n_photos_when_triggered` to the maximum expected photos per trigger. For example, if you have between 1 and 3 photos per triggering event, set `n_photos_when_triggered` to 3.
+- This will accomodate instances when there is variation in the number of photos per triggering event (e.g., 2 photos per trigger can be uploaded alongside 3 photos per trigger). Set `n_photos_when_triggered` to the maximum expected photos per trigger. For example, if you have between 1 and 3 photos per triggering event, set `n_photos_when_triggered` to 3. The maximum value that this can take is 8.
 
 ## Setup
 panoptes-cli is written in Python, so it must be installed on your computer. Installing from [here](https://www.python.org/downloads/) will also download pip, which is also required.
@@ -29,7 +29,8 @@ source("zooniverse_subject_uploader.R")
 my_file_info <- get_fileinfo(folder_to_upload = "path/to/your/photos/folder",
                              photo_file_type = 'JPG',
                              max_group = 1,
-                             search_subdirs = TRUE)
+                             search_subdirs = TRUE,
+                             seconds_between_triggers = 5)
 
 # collect the file paths of images within my_file_info$folder_to_upload
 file_paths <- get_paths(my_file_info)
