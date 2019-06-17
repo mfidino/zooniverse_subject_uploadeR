@@ -8,9 +8,9 @@ source("zooniverse_subject_uploader.R")
 # Get the file information you want to upload to zooniverse
 my_file_info <- get_fileinfo(folder_to_upload = "path/to/your/photos/folder",
                              photo_file_type = 'JPG',
-                             max_group = 1,
+                             max_group = 3,
                              search_subdirs = TRUE,
-                             seconds_between_triggers = NULL)
+                             seconds_between_triggers = 5)
 
 # collect the file paths of images within my_file_info$folder_to_upload
 file_paths <- get_paths(my_file_info)

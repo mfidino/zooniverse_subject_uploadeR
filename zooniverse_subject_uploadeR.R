@@ -68,7 +68,7 @@ get_fileinfo <- function(folder_to_upload = NULL,
                          photo_file_type = NULL,
                          search_subdirs = TRUE,
                          max_group = NULL,
-                         seconds_between_triggers = NULL){
+                         seconds_between_triggers = 5){
   # check that the folder exists
   if(!file.exists(folder_to_upload)){
     stop(paste(folder_to_upload, "does not exist. Change input given to 'folder_to_upload'."))
@@ -91,9 +91,6 @@ get_fileinfo <- function(folder_to_upload = NULL,
   }
   if(!is.numeric(max_group)){
     stop("max_group must be numeric.\n Current entry: ", max_group)
-  }
-  if(is.null(seconds_between_triggers)){
-    seconds_between_triggers <- 5
   }
 
   return(list(folder_to_upload = folder_to_upload,
