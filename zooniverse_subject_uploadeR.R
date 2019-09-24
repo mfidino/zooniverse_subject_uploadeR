@@ -345,7 +345,7 @@ bundle_photos <- function(date_time = NULL, fileinfo = NULL){
 
   # all photos not within 5 seconds of one another are
   #  grouped together
-  unq_batch <- c(0,which(date_time_psx>file_info$seconds_between_images | date_time_psx <0)) + 1
+  unq_batch <- c(0,which(date_time_psx>fileinfo$seconds_between_images | date_time_psx <0)) + 1
 
   new_paths <- vector("list", length(unq_batch))
   for(i in 1:length(unq_batch)){
