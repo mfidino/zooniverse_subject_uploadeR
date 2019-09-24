@@ -207,7 +207,12 @@ get_sitenames <- function(file_paths = NULL, fileinfo = NULL){
     stop("please supply fileinfo to this function.")
   }
   if(!is.list(fileinfo) |
-     any(!names(fileinfo) %in% c('folder_to_upload', 'photo_file_type', 'search_subdirs', 'max_group'))){
+     any(
+       !c('folder_to_upload', 'photo_file_type',
+          'search_subdirs', 'max_group') %in%
+       names(fileinfo)
+     )
+  ){
     err <- paste0('Use get_fileinfo() to construct fileinfo argument.\n\n',
                   'EXAMPLE:\n\n',
                   "my_fileinfo <- get_fileinfo(folder_to_upload = 'file/path/to/photos/here',\n",
