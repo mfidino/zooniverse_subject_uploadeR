@@ -30,6 +30,12 @@ resize_photos(to_resize, my_file_info,
               output = "output/folder/location",
               crop_drop = TRUE, border = FALSE)
 
+# clean up the manifests to ensure you are uploading and equal
+#  number of images per manifest.
+cleanup_manifests(
+  output = "output/folder/location"
+)
+
 # upload the photos, this will open up a command prompt and execute
 #  a batch file to upload each manifest file in your output folder.
 upload_photos(output = "output/folder/location",

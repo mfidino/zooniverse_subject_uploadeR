@@ -579,6 +579,57 @@ resize_photos <- function(to_resize = NULL, fileinfo = NULL, output = NULL,
 # make it a bat file
 # FOR %i IN (manifest_*) DO panoptes subject-set upload-subjects --allow-missing -m image/jpg 74127 %i
 
+cleanup_manifests <- function(output){
+  # get the manifests
+  m <- list.files(
+    output,
+    pattern = "manifest_",
+    full.names = TRUE
+  )
+  my_pb <- txtProgressBar(0, length(m))
+  # loop through them and modify as needed.
+  for(i in 1:length(m)){
+    setTxtProgressBar(my_pb, value = i)
+    tmp <- read.csv(
+      m[i],
+      stringsAsFactors = FALSE,
+      check.names = FALSE
+    )
+    # get the count of number of images in the file
+    nimages <- rowSums(
+      !is.na(
+        tmp[,grep("image_", colnames(tmp))]
+      )
+    )
+    # go to the next manifest if all of them have the
+    #  same number of images.
+    if(length(unique(nimages)) == 1){
+      next
+    } else {
+    # split the dataframe based on the count
+    new_manifest <- split(
+      tmp,
+      factor(nimages)
+    )
+    # go through and rename the files so they are all unique
+    for(j in 1:length(new_df)){
+      new_path <- gsub(
+        "_(\\w+?)",
+        paste0("_\\1_",j),
+        m[i]
+      )
+      write.csv(
+        new_manifest[j],
+        new_path,
+        row.names = FALSE
+      )
+    }
+    file.remove(m[i])
+    }
+  }
+
+}
+
 upload_photos <- function(output = NULL, subject_set = NULL){
   output <- normalizePath(output, winslash = "/")
   sink('panoptes_windows.bat')
