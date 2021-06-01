@@ -612,7 +612,6 @@ cleanup_manifests <- function(output){
       factor(nimages)
     )
     # go through and rename the files so they are all unique
-    for(j in 1:length(new_df)){
       new_path <- gsub(
         "_(\\w+?)",
         paste0("_\\1_",j),
@@ -637,7 +636,7 @@ upload_photos <- function(output = NULL, subject_set = NULL){
   paste0("@ECHO OFF\n",
          "cd %1\n",
          "ECHO This is a batch script to use panoptes cli.\n",
-         "panoptes configure\n",
+         #"panoptes configure\n",
          "FOR %%i IN (%1/manifest_*) DO panoptes subject-set upload-subjects --allow-missing -m image/jpg %2 %%i" ),
   fill = TRUE, sep = ""
   )
