@@ -612,6 +612,7 @@ cleanup_manifests <- function(output){
       factor(nimages)
     )
     # go through and rename the files so they are all unique
+    for(j in 1:length(new_manifest)){
       new_path <- gsub(
         "_(\\w+?)",
         paste0("_\\1_",j),
