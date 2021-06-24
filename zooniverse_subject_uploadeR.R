@@ -232,9 +232,9 @@ get_sitenames <- function(file_paths = NULL, fileinfo = NULL, site_from_folders 
     site_names <- strsplit(site_names, "/") %>% 
       sapply(FUN = function(x)paste0(x[1:(length(x)-1)], collapse = "/"))
     site_names <- gsub("^/", "", site_names)  
-    site_names <- gsub("/","_",site_names)
+    site_names <- gsub("/","-",site_names)
     site_names <- gsub("^\\\\", "", site_names)
-    site_names <- gsub("\\\\","_", site_names)
+    site_names <- gsub("\\\\","-", site_names)
   }else{
   # get just the file names
   photo_names <- strsplit(file_paths, "/") %>%
@@ -406,7 +406,7 @@ bundle_photos <- function(date_time = NULL, fileinfo = NULL){
   if(any(duplicated(new_photo_names))){
     # add on site name and check again
     new_photo_names[1:length(new_photo_names)] <- paste0(
-      date_time$site_names,"_",new_photo_names
+      date_time$site_names,"-",new_photo_names
     )
     # check one more time
   if(any(duplicated(new_photo_names))){
