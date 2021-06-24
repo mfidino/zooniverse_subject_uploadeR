@@ -182,7 +182,7 @@ get_paths <- function(fileinfo = NULL){
 # get_sitenames
 #################################
 
-get_sitenames <- function(file_paths = NULL, fileinfo = NULL){
+get_sitenames <- function(file_paths = NULL, fileinfo = NULL, site_from_folders = FALSE){
   # check file_paths
   if(is.null(file_paths)){
     stop("please supply file_paths to this function.")
@@ -221,13 +221,27 @@ get_sitenames <- function(file_paths = NULL, fileinfo = NULL){
                   "                     search_subdirs = TRUE)")
     stop(err)
   }
-
+  if(site_from_folders){
+    photo_names <- gsub(
+      fileinfo$folder_to_upload,
+      "",
+      file_paths
+    )
+    site_names <- gsub(fileinfo$photo_file_type, "", photo_names)
+    # Then drop the last part of the folder
+    site_names <- strsplit(site_names, "/") %>% 
+      sapply(FUN = function(x)paste0(x[1:(length(x)-1)], collapse = "/"))
+    site_names <- gsub("^/", "", site_names)  
+    site_names <- gsub("/","_",site_names)
+    site_names <- gsub("^\\\\", "", site_names)
+    site_names <- gsub("\\\\","_", site_names)
+  }else{
   # get just the file names
   photo_names <- strsplit(file_paths, "/") %>%
     sapply(FUN = function(x){x[length(x)]})
 
   site_names <- gsub(fileinfo$photo_file_type, "", photo_names)
-
+  }
   # drop numerics if the trail like 'site_0001', 'site_0002'
 
   if(length(grep("_\\w+$", site_names)) > 0 ){
@@ -388,7 +402,20 @@ bundle_photos <- function(date_time = NULL, fileinfo = NULL){
   new_photo_dates <- sapply(new_paths, function(x) as.character(x$DateTimeOriginal)) %>%
     matrix(., ncol = fileinfo$max_group, nrow = length(new_paths), byrow = TRUE)
 
+  # Check if new_photo_names are unique:
+  if(any(duplicated(new_photo_names))){
+    # add on site name and check again
+    new_photo_names[1:length(new_photo_names)] <- paste0(
+      date_time$site_names,"_",new_photo_names
+    )
+    # check one more time
+  if(any(duplicated(new_photo_names))){
+    stop("Duplicate photo names even after adding site info to image name.")
+  }  
+  }
+  
   to_return <- list(paths = lapply(new_paths, function(x)x$file_paths),
+                    site_names = date_time$site_names,
                     names = new_photo_names,
                     times = new_photo_dates)
   class(to_return) <- "prepped_paths"
@@ -534,16 +561,18 @@ resize_photos <- function(to_resize = NULL, fileinfo = NULL, output = NULL,
     #  length of the datetime_columns object
     datetime_columns <- paste("#datetime", 1:fileinfo$max_group, sep = "_")
     manifest <- data.frame(matrix(id, nrow = length(id),
-                                  ncol = 1 + fileinfo$max_group + length(datetime_columns)))
+                                  ncol = 2 + fileinfo$max_group + length(datetime_columns)))
     # id and then the file names
 
     colnames(manifest) <- c("id",
                             paste0(rep("image_", fileinfo$max_group),
-                                   1:fileinfo$max_group), datetime_columns)
+                                   1:fileinfo$max_group), datetime_columns, "#site")
     # put the new_photo_names in the manifest
     manifest[,grep("^image_\\w+$", colnames(manifest))] <- to_resize$names[id,]
     # put the date-time in the manifest
     manifest[,grep("^#datetime_\\w+$", colnames(manifest))] <- to_resize$times[id,]
+    # put the site in the manifest
+    manifest[,(grep("^#site", colnames(manifest)))] <- to_resize$site_names[i]
 
     # name of manifest file
     manifest_file_path <- paste0(output,"/manifest_",i,".csv")
