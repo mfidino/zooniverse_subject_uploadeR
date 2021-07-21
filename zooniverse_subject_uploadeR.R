@@ -596,7 +596,7 @@ resize_photos <- function(to_resize = NULL, fileinfo = NULL, output = NULL,
       } else { # if only one photo per trigger
         for(subject in 1:length(id)){
           system(paste0(pwq(im), pwq(to_resize$paths[id[subject]]), im_call,
-                        pwq(paste0(output, "/", to_resize$names[id[subject],]),
+                        pwq(paste0(output, "\\", to_resize$names[id[subject],]),
                             space = FALSE)))
         }
       }
